@@ -1,0 +1,322 @@
+---
+title: "Sales performance analysis and economic drivers in retail"
+author: "Jordy Alfaro Brenes"
+date: "2025-03-13"
+output: 
+  html_document:
+    toc: yes
+    toc_float: yes
+    df_print: paged
+    code_folding: hide
+---
+
+# Introduction
+In today's competitive retail industry, understanding what factors drive sales is essential for effective decision-making and strategic planning. This project aims to analyze historical sales data from one of the world’s largest retail chains to identify economic and seasonal variables that may influence business performance.
+
+The dataset contains weekly sales records for multiple stores, along with additional information such as air temperature, fuel prices, holiday indicators, consumer price index (CPI), and unemployment rate. These variables allow us to explore patterns, assess external drivers of sales, and develop predictive models to forecast future performance under different economic scenarios.
+
+By applying advanced data analysis techniques and machine learning models in R, this project seeks to provide actionable insights that can support inventory planning, marketing strategies, and resource allocation. The final results can help stakeholders anticipate changes in demand and make data-driven decisions that enhance operational efficiency and profitability.
+
+# Dataset description
+
+The dataset used in this project contains historical weekly sales data from a major retail chain in the United States. Each observation corresponds to a specific store and week, accompanied by several external and economic variables that may influence sales behavior.
+
+The dataset includes the following variables:
+
+- **Store**: Unique identifier for each store.
+- **Date**: Start date of the sales week.
+- **Weekly_Sales**: Total sales for the given store and week.
+- **Holiday_Flag**: Indicates whether the sales week includes a national holiday (1 = holiday week, 0 = non-holiday).
+- **Temperature**: Average regional air temperature (in Fahrenheit).
+- **Fuel_Price**: Average fuel price in the region (in USD).
+- **CPI**: Consumer Price Index, measuring changes in the price level of consumer goods and services.
+- **Unemployment**: Regional unemployment rate (in percentage).
+
+The dataset covers multiple years and stores, allowing for cross-sectional and time series analysis. It provides a rich context for exploring how economic and seasonal factors may influence retail performance. This makes it suitable for predictive modeling and scenario simulation in a business decision-making context.
+
+```{r,include=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(lubridate)
+library(corrplot)
+library(GGally)
+library(car)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(xgboost)
+library(knitr)
+library(kableExtra)
+```
+
+```{r}
+# 📁 Importar dataset
+data <- read.csv("Walmart_Sales.csv")
+
+# 👀 Vista rápida del dataset
+head(data)
+str(data)
+summary(data)
+
+# 🔄 Convertir la columna de fecha
+data$Date <- dmy(data$Date)  # Usa lubridate para formato DD-MM-YYYY
+
+# ➕ Crear nuevas variables: Año, Mes y Semana
+data <- data %>%
+  mutate(
+    Year = year(Date),
+    Month = month(Date, label = TRUE),
+    Week = week(Date)
+  )
+
+data$Holiday_Flag <- as.factor(data$Holiday_Flag)
+data$Store <- as.factor(data$Store)
+
+
+# 💡 Verificar si hay valores NA
+colSums(is.na(data))
+
+# 📈 Tendencia general de ventas en el tiempo
+ggplot(data, aes(x = Date, y = Weekly_Sales)) +
+  geom_line(color = "steelblue") +
+  labs(title = "Weekly Sales Over Time", x = "Date", y = "Weekly Sales")
+
+# 📊 Boxplot: ventas en semanas con vs sin feriados
+ggplot(data, aes(x = as.factor(Holiday_Flag), y = Weekly_Sales)) +
+  geom_boxplot(fill = "darkorange") +
+  labs(title = "Sales Distribution - Holiday vs Non-Holiday",
+       x = "Holiday (0 = No, 1 = Yes)", y = "Weekly Sales")
+
+# 🔍 Correlación entre variables numéricas
+data_num <- data %>%
+  select(Weekly_Sales, Temperature, Fuel_Price, CPI, Unemployment)
+
+ggpairs(data_num)
+
+# Histograma con curva de densidad
+ggplot(data, aes(x = Weekly_Sales)) +
+  geom_histogram(fill = "orange", bins = 30, color = "black") +
+  geom_density(color = "darkorange", size = 1.2) +
+  labs(title = "Distribution of Weekly Sales",
+       x = "Weekly Sales", y = "Frequency") +
+  theme_minimal()
+
+# Cálculo de promedio por tienda
+avg_sales <- data %>%
+  group_by(Store) %>%
+  summarise(Average_Weekly_Sales = mean(Weekly_Sales))
+
+# Gráfico de barras
+ggplot(avg_sales, aes(x = factor(Store), y = Average_Weekly_Sales)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Average Weekly Sales per Store",
+       x = "Store", y = "Average Weekly Sales") +
+  theme_minimal()
+
+# Agrupar por semana
+sales_by_date <- data %>%
+  group_by(Date) %>%
+  summarise(Total_Weekly_Sales = sum(Weekly_Sales))
+
+# Gráfico de línea
+ggplot(sales_by_date, aes(x = Date, y = Total_Weekly_Sales)) +
+  geom_line(color = "orange", size = 1) +
+  labs(title = "Total Weekly Sales Over Time",
+       x = "Date", y = "Total Weekly Sales") +
+  theme_minimal()
+
+# Boxplot de ventas según Holiday_Flag
+ggplot(data, aes(x = factor(Holiday_Flag), y = Weekly_Sales)) +
+  geom_boxplot(fill = c("goldenrod", "orangered")) +
+  labs(title = "Weekly Sales: Holiday vs Non-Holiday Weeks",
+       x = "Holiday (0 = No, 1 = Yes)", y = "Weekly Sales") +
+  theme_minimal()
+
+# Gráficos individuales
+ggplot(data, aes(x = Temperature, y = Weekly_Sales)) +
+  geom_point(color = "darkorange") +
+  labs(title = "Sales vs Temperature") + theme_minimal()
+
+ggplot(data, aes(x = Fuel_Price, y = Weekly_Sales)) +
+  geom_point(color = "darkorange") +
+  labs(title = "Sales vs Fuel Price") + theme_minimal()
+
+ggplot(data, aes(x = CPI, y = Weekly_Sales)) +
+  geom_point(color = "darkorange") +
+  labs(title = "Sales vs CPI") + theme_minimal()
+
+ggplot(data, aes(x = Unemployment, y = Weekly_Sales)) +
+  geom_point(color = "darkorange") +
+  labs(title = "Sales vs Unemployment") + theme_minimal()
+
+# Seleccionar solo variables numéricas
+numeric_vars <- data %>%
+  select(Weekly_Sales, Temperature, Fuel_Price, CPI, Unemployment)
+
+# Calcular correlación
+cor_matrix <- cor(numeric_vars)
+
+# Heatmap con corrplot
+corrplot(cor_matrix, method = "color", type = "upper", 
+         addCoef.col = "black", tl.col = "black", number.cex = 0.8)
+
+# Modelo de regresión lineal múltiple
+modelo <- lm(Weekly_Sales ~ Temperature + Fuel_Price + CPI + Unemployment + Holiday_Flag, data = data)
+
+# Resumen del modelo
+summary(modelo)
+
+# Instalar si no tienes el paquete
+# install.packages("car")
+
+vif(modelo)
+
+# Graficar residuos y normalidad
+par(mfrow = c(2, 2))
+plot(modelo)
+par(mfrow = c(1, 1))
+
+# Predecir con el mismo dataset
+data$Predicted_Sales <- predict(modelo, newdata = data)
+
+# Comparar real vs predicho
+ggplot(data, aes(x = Weekly_Sales, y = Predicted_Sales)) +
+  geom_point(color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Actual vs Predicted Sales",
+       x = "Actual Sales", y = "Predicted Sales") +
+  theme_minimal()
+
+# Dividir en train/test
+set.seed(123)
+index <- createDataPartition(data$Weekly_Sales, p = 0.8, list = FALSE)
+train <- data[index, ]
+test <- data[-index, ]
+
+# Entrenar árbol
+modelo_tree <- rpart(Weekly_Sales ~ Temperature + Fuel_Price + CPI + Unemployment + Holiday_Flag + Month + Store,
+                     data = train, method = "anova")
+
+# Graficar árbol
+rpart.plot(modelo_tree)
+
+# Predicción
+pred_tree <- predict(modelo_tree, newdata = test)
+
+# Evaluar
+RMSE_tree <- RMSE(pred_tree, test$Weekly_Sales)
+R2_tree <- R2(pred_tree, test$Weekly_Sales)
+
+cat("Tree RMSE:", RMSE_tree, " | R²:", R2_tree, "\n")
+
+modelo_rf <- randomForest(Weekly_Sales ~ Temperature + Fuel_Price + CPI + Unemployment + Holiday_Flag + Month + Store,
+                          data = train, ntree = 500, importance = TRUE)
+
+# Importancia de variables
+varImpPlot(modelo_rf)
+
+# Predicción
+pred_rf <- predict(modelo_rf, newdata = test)
+
+# Evaluación
+RMSE_rf <- RMSE(pred_rf, test$Weekly_Sales)
+R2_rf <- R2(pred_rf, test$Weekly_Sales)
+
+cat("Random Forest RMSE:", RMSE_rf, " | R²:", R2_rf, "\n")
+
+
+# Convertir data a matriz numérica
+train_matrix <- model.matrix(Weekly_Sales ~ . -Date, data = train)[, -1]
+test_matrix <- model.matrix(Weekly_Sales ~ . -Date, data = test)[, -1]
+
+dtrain <- xgb.DMatrix(data = train_matrix, label = train$Weekly_Sales)
+dtest  <- xgb.DMatrix(data = test_matrix, label = test$Weekly_Sales)
+
+# Entrenar modelo
+params <- list(objective = "reg:squarederror", eval_metric = "rmse")
+modelo_xgb <- xgboost(params = params, data = dtrain, nrounds = 100, verbose = 0)
+
+# Predicción
+pred_xgb <- predict(modelo_xgb, newdata = dtest)
+
+# Evaluación
+RMSE_xgb <- RMSE(pred_xgb, test$Weekly_Sales)
+R2_xgb <- R2(pred_xgb, test$Weekly_Sales)
+
+cat("XGBoost RMSE:", RMSE_xgb, " | R²:", R2_xgb, "\n")
+
+
+# Crear un dataframe resumen de métricas
+model_performance <- tibble(
+  Model = c("Linear Regression", "Decision Tree", "Random Forest", "XGBoost"),
+  RMSE  = c(RMSE(predict(modelo, newdata = test), test$Weekly_Sales),
+            RMSE_tree,
+            RMSE_rf,
+            RMSE_xgb),
+  R2    = c(R2(predict(modelo, newdata = test), test$Weekly_Sales),
+            R2_tree,
+            R2_rf,
+            R2_xgb)
+)
+
+# Gráfico comparativo - RMSE
+ggplot(model_performance, aes(x = Model, y = RMSE, fill = Model)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Model Comparison - RMSE", y = "RMSE", x = "") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Gráfico comparativo - R²
+ggplot(model_performance, aes(x = Model, y = R2, fill = Model)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Model Comparison - R²", y = "R²", x = "") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Tabla con kable para portafolio RMarkdown
+
+model_performance %>%
+  mutate(RMSE = round(RMSE, 2),
+         R2 = round(R2, 4)) %>%
+  kable(caption = "Model Performance Comparison", align = "c") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed"))
+
+# Tomar una muestra real del test set como base
+whatif_data <- test[1:10, ]
+
+# Simular un aumento del precio del combustible
+whatif_data$Fuel_Price <- whatif_data$Fuel_Price + 0.50
+
+# Simular una disminución de temperatura
+whatif_data$Temperature <- whatif_data$Temperature - 5
+
+# Predicción bajo escenario modificado
+pred_whatif_rf <- predict(modelo_rf, newdata = whatif_data)
+
+# Comparar con predicción original
+pred_original_rf <- predict(modelo_rf, newdata = test[1:10, ])
+
+# Crear tabla comparativa
+whatif_comparison <- tibble(
+  Store = test$Store[1:10],
+  Temperature_Original = test$Temperature[1:10],
+  Fuel_Price_Original = test$Fuel_Price[1:10],
+  Predicted_Original = round(pred_original_rf, 2),
+  Temperature_Simulated = whatif_data$Temperature,
+  Fuel_Price_Simulated = whatif_data$Fuel_Price,
+  Predicted_Simulated = round(pred_whatif_rf, 2),
+  Difference = round(pred_whatif_rf - pred_original_rf, 2)
+)
+
+print(whatif_comparison)
+
+ggplot(whatif_comparison, aes(x = Store)) +
+  geom_bar(stat = "identity", aes(y = Difference, fill = Difference > 0)) +
+  labs(title = "Impact of Fuel Price ↑ and Temperature ↓ on Predicted Sales",
+       y = "Change in Predicted Sales", x = "Store") +
+  theme_minimal() +
+  scale_fill_manual(values = c("red", "green"), labels = c("Decrease", "Increase"))
+
+
+```

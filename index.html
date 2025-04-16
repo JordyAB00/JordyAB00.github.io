@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jordy Alfaro | Data Scientist Portfolio</title>
+  <!-- Bootstrap CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --secondary-color: #6c757d;
+      --dark-color: #212529;
+      --light-color: #f8f9fa;
+      --accent-color: #17a2b8;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      padding-top: 76px;
+      line-height: 1.7;
+      color: #333;
+      scroll-behavior: smooth;
+      background-color: #f9f9f9;
+    }
+    
+    .navbar {
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      padding: 10px 0;
+    }
+    
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--primary-color) !important;
+    }
+    
+    .nav-link {
+      font-weight: 500;
+      transition: color 0.3s ease;
+      margin: 0 5px;
+      position: relative;
+    }
+    
+    .nav-link:after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 0;
+      background-color: var(--primary-color);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover:after {
+      width: 100%;
+    }
+    
+    section {
+      padding: 100px 0;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: 700;
+    }
+    
+    .section-title {
+      margin-bottom: 60px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .section-title:after {
+      content: '';
+      position: absolute;
+      width: 50%;
+      height: 3px;
+      background-color: var(--primary-color);
+      bottom: -10px;
+      left: 25%;
+    }
+    
+    /* Hero Section */
+    .hero-section {
+      background: linear-gradient(to right, rgba(13, 110, 253, 0.9), rgba(23, 162, 184, 0.9)), url('images/hero-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      color: white;
+      text-align: center;
+      padding: 150px 0;
+      position: relative;
+    }
+    
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .typed-text {
+      color: #fff;
+      font-weight: 700;
+    }
+    
+    /* About Section */
+    .about-section {
+      background-color: white;
+    }
+    
+    .about-img {
+      width: 300px;
+      height: 300px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 5px solid var(--primary-color);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .about-img:hover {
+      transform: scale(1.05);
+    }
+    
+    .about-text {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    
+    /* Projects Section */
+    .projects-section {
+      background-color: #f5f7fa;
+    }
+    
+    .project-card {
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      height: 100%;
+    }
+    
+    .project-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+    
+    .project-img {
+      height: 200px;
+      object-fit: cover;
+    }
+    
+    .project-link {
+      display: inline-block;
+      margin: 5px;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: white;
+      background-color: var(--primary-color);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .project-link:hover {
+      background-color: #0b5ed7;
+      transform: scale(1.05);
+    }
+    
+    /* Skills Section */
+    .skills-section {
+      background-color: white;
+    }
+    
+    .skill-card {
+      padding: 30px 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      height: 100%;
+      background-color: #fff;
+    }
+    
+    .skill-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .skill-icon {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 20px;
+      transition: transform 0.3s ease;
+    }
+    
+    .skill-card:hover .skill-icon {
+      transform: scale(1.1);
+    }
+    
+    .skill-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--primary-color);
+    }
+    
+    /* Contact Section */
+    .contact-section {
+      background: linear-gradient(135deg, #0d6efd, #17a2b8);
+      color: white;
+    }
+    
+    .contact-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+    }
+    
+    .contact-info i {
+      font-size: 1.5rem;
+      margin-right: 15px;
+      color: white;
+    }
+    
+    .social-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: rgba(255,255,255,0.2);
+      margin: 0 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .social-icon:hover {
+      background-color: white;
+      transform: translateY(-5px);
+    }
+    
+    .social-icon img {
+      width: 30px;
+      height: 30px;
+      transition: all 0.3s ease;
+    }
+    
+    .social-icon:hover img {
+      filter: brightness(0);
+    }
+    
+    .social-icon i {
+      font-size: 1.8rem;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .social-icon:hover i {
+      color: var(--primary-color);
+    }
+    
+    .social-text {
+      display: block;
+      margin-top: 5px;
+      font-size: 0.9rem;
+    }
+    
+    /* Footer */
+    footer {
+      background-color: #212529;
+      color: white;
+      padding: 30px 0;
+      text-align: center;
+    }
+    
+    /* Scroll to top button */
+    .scroll-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+    
+    .scroll-top.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Animation */
+    .animate {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.5s ease;
+    }
+    
+    .animate.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* Timeline for education/experience */
+    .timeline {
+      position: relative;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .timeline::after {
+      content: '';
+      position: absolute;
+      width: 2px;
+      background-color: var(--primary-color);
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      margin-left: -1px;
+    }
+    
+    .timeline-item {
+      padding: 10px 40px;
+      position: relative;
+      width: 50%;
+      box-sizing: border-box;
+    }
+    
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: white;
+      border: 3px solid var(--primary-color);
+      top: 15px;
+      border-radius: 50%;
+      z-index: 1;
+    }
+    
+    .timeline-left {
+      left: 0;
+    }
+    
+    .timeline-right {
+      left: 50%;
+    }
+    
+    .timeline-left::after {
+      right: -10px;
+    }
+    
+    .timeline-right::after {
+      left: -10px;
+    }
+    
+    .timeline-content {
+      padding: 20px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    @media screen and (max-width: 768px) {
+      .timeline::after {
+        left: 31px;
+      }
+      
+      .timeline-item {
+        width: 100%;
+        padding-left: 70px;
+        padding-right: 25px;
+      }
+      
+      .timeline-item::after {
+        left: 22px;
+      }
+      
+      .timeline-right {
+        left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION BAR START -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="#home">Jordy Alfaro Brenes</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#home">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#about">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#projects">Projects</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#skills">Skills</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#experience">Experience</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#education">Education</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#contact">Contact</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<!-- NAVIGATION BAR END -->
+
+<!-- HERO SECTION START -->
+<section id="home" class="hero-section">
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="display-3 fw-bold mb-4">Jordy Alfaro Brenes</h1>
+      <h2 class="fw-light mb-4">Data Scientist & Mathematics Educator</h2>
+      <p class="lead mb-5">Transforming complex data into actionable insights through statistical modeling, machine learning, and data visualization</p>
+      <div>
+        <a href="#projects" class="btn btn-light btn-lg me-3 px-4 py-2">View Projects</a>
+        <a href="#contact" class="btn btn-outline-light btn-lg px-4 py-2">Contact Me</a>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- HERO SECTION END -->
+
+<!-- ABOUT SECTION START -->
+<section id="about" class="about-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 text-center">
+        <h2 class="display-4 fw-bold section-title">About Me</h2>
+      </div>
+    </div>
+    <div class="row align-items-center mt-5">
+      <div class="col-lg-4 text-center mb-4 mb-lg-0">
+        <img src="images/about/1.jpg" alt="Jordy Alfaro" class="about-img">
+      </div>
+      <div class="col-lg-8">
+        <div class="about-text">
+          I'm a Data Scientist with a strong mathematical foundation and expertise in statistical modeling, machine learning, and data visualization. My background in mathematics allows me to approach complex problems with precision and strategic thinking.
+        </div>
+        
+        <div class="about-text">
+          With a proven ability to extract insights from complex datasets using Python, R, SQL, and Power BI, I focus on transforming raw data into actionable intelligence that drives business and educational innovation. I apply techniques in statistical analysis, data visualization, and predictive modeling to extract maximum value from both structured and unstructured data.
+        </div>
+        
+        <div class="about-text">
+          Beyond my technical skills, I'm also passionate about mathematics education, currently serving as a university professor teaching statistics and numerical analysis. This dual expertise allows me to bridge the gap between advanced analytical concepts and practical applications.
+        </div>
+        
+        <div class="mt-4">
+          <a href="#" class="btn btn-primary me-3">Download CV</a>
+          <a href="#contact" class="btn btn-outline-primary">Contact Me</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ABOUT SECTION END -->
+
+<!-- PROJECTS SECTION START -->
+<section id="projects" class="projects-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 text-center">
+        <h2 class="display-4 fw-bold section-title">Featured Projects</h2>
+      </div>
+    </div>
+    <div class="row g-4 mt-4">
+      
+     <!-- Project 1: Customer Segmentation -->
+<div class="col-md-6 col-lg-3">
+  <div class="project-card">
+    <img src="images/projects/11.png" class="card-img-top project-img" alt="Bank Customer Segmentation">
+    <div class="card-body">
+      <h4 class="card-title fw-bold mb-3">Bank Customer Segmentation</h4>
+      <p class="card-text">
+        Advanced clustering analysis identified 6 customer segments with subscription rates varying from 2.2% to 48.6%. Applied K-means, GMM, PCA for optimized marketing strategies.
+      </p>
+      <div class="mt-3">
+        <a href="https://jordyab00.github.io/bank-customer-segmentation/bank_segmentation_analysis.html" class="project-link">
+          <i class="bi bi-file-earmark-text me-1"></i> Case Study
+        </a>
+        <a href="https://github.com/JordyAB00/bank-customer-segmentation" class="project-link">
+          <i class="bi bi-github me-1"></i> Code
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+      <!-- Project 2: Sentiment Classifier -->
+      <div class="col-md-6 col-lg-3">
+        <div class="project-card">
+          <img src="images/projects/2.jpg" class="card-img-top project-img" alt="Sentiment Analysis">
+          <div class="card-body">
+            <h4 class="card-title fw-bold mb-3">Sentiment Classifier</h4>
+            <p class="card-text">
+              Analyzed customer opinions and reviews to classify sentiment as positive, negative, or neutral from social media comments, surveys, and product reviews.
+            </p>
+            <div class="mt-3">
+              <a href="#" class="project-link">
+                <i class="bi bi-file-earmark-text me-1"></i> Details
+              </a>
+              <a href="#" class="project-link">
+                <i class="bi bi-github me-1"></i> Code
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 3: Churn Prediction -->
+      <div class="col-md-6 col-lg-3">
+        <div class="project-card">
+          <img src="images/projects/3.jpg" class="card-img-top project-img" alt="Churn Prediction">
+          <div class="card-body">
+            <h4 class="card-title fw-bold mb-3">Churn Prediction</h4>
+            <p class="card-text">
+              Predicted customer discontinuation likelihood using Random Forest, XGBoost, LightGBM, and Logistic Regression, enabling proactive retention strategies.
+            </p>
+            <div class="mt-3">
+              <a href="#" class="project-link">
+                <i class="bi bi-file-earmark-text me-1"></i> Report
+              </a>
+              <a href="#" class="project-link">
+                <i class="bi bi-github me-1"></i> Code
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 4: Customer Classification -->
+      <div class="col-md-6 col-lg-3">
+        <div class="project-card">
+          <img src="images/projects/1.jpg" class="card-img-top project-img" alt="Customer Classification">
+          <div class="card-body">
+            <h4 class="card-title fw-bold mb-3">Customer Classification</h4>
+            <p class="card-text">
+              Predicted customer segments based on behavior and profile using Random Forest, Neural Networks, and Naive Bayes for better product personalization.
+            </p>
+            <div class="mt-3">
+              <a href="#" class="project-link">
+                <i class="bi bi-file-earmark-text me-1"></i> Details
+              </a>
+              <a href="#" class="project-link">
+                <i class="bi bi-github me-1"></i> Code
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="text-center mt-5">
+      <a href="#" class="btn btn-outline-primary btn-lg">View All Projects</a>
+    </div>
+  </div>
+</section>
+<!-- PROJECTS SECTION END -->
+
+<!-- SKILLS SECTION START -->
+<section id="skills" class="skills-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 text-center">
+        <h2 class="display-4 fw-bold section-title">Technical Skills</h2>
+      </div>
+    </div>
+    <div class="row g-4 mt-4">
+
+      <!-- Skill 1: Python -->
+      <div class="col-md-4 col-lg-3 mb-4">
+        <div class="skill-card text-center">
+          <img src="images/skills/1.png" alt="Python Icon" class="skill-icon">
+          <h5 class="skill-title">Python</h5>
+          <p>
+            Data analysis with pandas, NumPy, scikit-learn for machine learning, and data visualization with matplotlib and seaborn.
+          </p>
+        </div>
+      </div>
+
+      <!-- Skill 2: R Programming -->
+      <div class="col-md-4 col-lg-3 mb-4">
+        <div class="skill-card text-center">
+          <img src="images/skills/5.png" alt="R Icon" class="skill-icon">
+          <h5 class="skill-title">R Programming</h5>
+          <p>
+            Statistical analysis, data manipulation with dplyr, visualization with ggplot2, and development of data-driven applications.
+          </p>
+        </div>
+      </div>
+
+      <!-- Skill 3: SQL -->
+      <div class="col-md-4 col-lg-3 mb-4">
+        <div class="skill-card text-center">
+          <img src="images/skills/3.png" alt="SQL Icon" class="skill-icon">
+          <h5 class="skill-title">SQL & Databases</h5>
+          <p>
+            Working with PostgreSQL, MySQL for data extraction, transformation, advanced querying and database management.
+          </p>
+        </div>
+      </div>
+
+      <!-- Skill 4: Machine Learning -->
+      <div class="col-md-4 col-lg-3 mb-4">
+        <div class="skill-card text-center">
+          <img src="images/skills/6.png" alt="Machine Learning Icon" class="skill-icon">
+          <h5 class="skill-title">Machine Learning</h5>
+          <p>
+            Supervised & unsupervised learning, feature engineering, and deep learning models for predictive analytics.
+          </p>
+        </div>
+      </div>
+
+      <!-- Skill 5: Data Visualization -->
+      <div class="col-md-4 col-lg-3 mb-4">
+        <div class="skill-card text-center">
+          <img src="images/skills/2.png" alt="Data Visualization Icon" class="skill-icon">
+          <h5 class="skill-title">Data Visualization</h5>
+          <p>
+            Creating compelling visualizations with Power BI, Tableau, matplotlib, seaborn to communicate insights effectively.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Skill 6: Statistical Analysis -->
+      <div class="col-md-4 col-lg-3 mb-4">
+        <div class="skill-card text-center">
+          <img src="images/skills/7.png" alt="Statistical Analysis Icon" class="skill-icon">
+          <h5 class="skill-title">Statistical Analysis</h5>
+          <p>
+            Advanced statistics, exploratory data analysis (EDA), and predictive modeling for data-driven decision making.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Skill 7: MATLAB -->
+      <div class="col-md-4 col-lg-3 mb-4">
+        <div class="skill-card text-center">
+          <img src="images/skills/8.png" alt="MATLAB Icon" class="skill-icon">
+          <h5 class="skill-title">MATLAB</h5>
+          <p>
+            Mathematical modeling, numerical analysis, and algorithm development for complex computational problems.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Skill 8: Big Data -->
+      <div class="col-md-4 col-lg-3 mb-4">
+        <div class="skill-card text-center">
+          <img src="images/skills/9.png" alt="Big Data Icon" class="skill-icon">
+          <h5 class="skill-title">Big Data</h5>
+          <p>
+            Working with Google Colab, Hadoop, and Apache Spark for processing and analyzing large-scale datasets.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+<!-- SKILLS SECTION END -->
+
+<!-- EXPERIENCE SECTION START -->
+<section id="experience" class="py-5" style="background-color: #f5f7fa;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 text-center">
+        <h2 class="display-4 fw-bold section-title">Professional Experience</h2>
+      </div>
+    </div>
+    
+    <div class="timeline mt-5">
+      <!-- Experience Item 1 -->
+      <div class="timeline-item timeline-left">
+        <div class="timeline-content">
+          <h4 class="fw-bold text-primary">Freelance Data Science Consultant</h4>
+          <h5>Remote | 2023 - Present</h5>
+          <p>
+            Providing data science consulting services for clients in education, marketing, and business sectors. Developing machine learning models for applications such as customer segmentation, churn prediction, and sentiment analysis.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Experience Item 2 -->
+      <div class="timeline-item timeline-right">
+        <div class="timeline-content">
+          <h4 class="fw-bold text-primary">Mathematics & Statistics Professor</h4>
+          <h5>Universidad Latinoamericana de Ciencia y Tecnología (ULACIT) | 2023 - Present</h5>
+          <p>
+            Teaching descriptive and inferential statistics, numerical analysis with applications in R, Python, and MATLAB. Developing applied projects in business statistics and implementing data science tools in the teaching process.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Experience Item 3 -->
+      <div class="timeline-item timeline-left">
+        <div class="timeline-content">
+          <h4 class="fw-bold text-primary">Mathematics Teacher</h4>
+          <h5>Centro Educativo Cristiano Reformado | 2023</h5>
+          <p>
+            Taught mathematics to high school students from 7th to 11th grade. Developed technology-based teaching strategies for mathematics education.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Experience Item 4 -->
+      <div class="timeline-item timeline-right">
+        <div class="timeline-content">
+          <h4 class="fw-bold text-primary">Secondary School Mathematics Teacher</h4>
+          <h5>EMVA High School | 2022</h5>
+          <p>
+            Taught 7th and 8th grade mathematics, applying innovative teaching methods for complex mathematical concepts.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- EXPERIENCE SECTION END -->
+
+<!-- EDUCATION SECTION START -->
+<section id="education" class="py-5 bg-white">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 text-center">
+        <h2 class="display-4 fw-bold section-title">Education & Certifications</h2>
+      </div>
+    </div>
+    
+    <div class="row g-4 mt-5">
+      <!-- Education Column -->
+      <div class="col-lg-6">
+        <h3 class="mb-4 text-primary">Academic Education</h3>
+        
+        <div class="card mb-4 border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <i class="bi bi-mortarboard-fill text-primary me-3" style="font-size: 2rem;"></i>
+              <div>
+                <h5 class="card-title fw-bold mb-1">Master's in Mathematical Methods and Applications</h5>
+                <h6 class="text-muted">Universidad de Costa Rica | 2023 - Present</h6>
+              </div>
+            </div>
+            <p class="card-text">
+              Advanced study in mathematical methods and their applications in data science and computational fields.
+            </p>
+          </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <i class="bi bi-mortarboard-fill text-primary me-3" style="font-size: 2rem;"></i>
+              <div>
+                <h5 class="card-title fw-bold mb-1">Bachelor's in Mathematics Education with Technological Environments</h5>
+                <h6 class="text-muted">Tecnológico de Costa Rica | 2018 - 2023</h6>
+              </div>
+            </div>
+            <p class="card-text">
+              Specialized in mathematics education with emphasis on technology integration and application.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Certifications Column -->
+      <div class="col-lg-6">
+        <h3 class="mb-4 text-primary">Professional Development</h3>
+        
+        <div class="card mb-3 border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <i class="bi bi-award-fill text-primary me-3" style="font-size: 2rem;"></i>
+              <div>
+                <h5 class="card-title fw-bold mb-1">Big Data</h5>
+                <h6 class="text-muted">Universidad Fidélitas | 2024 - In Progress</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card mb-3 border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <i class="bi bi-award-fill text-primary me-3" style="font-size: 2rem;"></i>
+              <div>
+                <h5 class="card-title fw-bold mb-1">Artificial Intelligence & Data Analysis for Business</h5>
+                <h6 class="text-muted">ULACIT | 2025 - In Progress</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card mb-3 border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <i class="bi bi-award-fill text-primary me-3" style="font-size: 2rem;"></i>
+              <div>
+                <h5 class="card-title fw-bold mb-1">Professional Certification in Digital Marketing & Social Media</h5>
+                <h6 class="text-muted">Universidad Politécnica de Valencia | 2023</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <i class="bi bi-translate text-primary me-3" style="font-size: 2rem;"></i>
+              <div>
+                <h5 class="card-title fw-bold mb-1">Conversational English</h5>
+                <h6 class="text-muted">Universidad de Costa Rica | B2 Level</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- EDUCATION SECTION END -->
+
+<!-- CONTACT SECTION START -->
+<section id="contact" class="contact-section">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-md-8 text-center">
+  <h2 class="display-4 fw-bold section-title">Get In Touch</h2>
+</div>
+</div>
+
+<div class="row g-4 mt-5">
+<div class="col-lg-5">
+  <div class="contact-info">
+    <i class="bi bi-geo-alt-fill"></i>
+    <span>Tibás, Costa Rica</span>
+  </div>
+  <div class="contact-info">
+    <i class="bi bi-envelope-fill"></i>
+    <span>jordyab00@gmail.com</span>
+  </div>
+  <div class="contact-info">
+    <i class="bi bi-telephone-fill"></i>
+    <span>+506 8436-8480 / +506 8340-1743</span>
+  </div>
+  
+  <h4 class="text-white mt-4 mb-3">Follow Me On</h4>
+  <div class="d-flex flex-wrap">
+    <a href="https://www.linkedin.com/in/jab00/" class="social-icon" target="_blank">
+      <i class="bi bi-linkedin"></i>
+    </a>
+    <a href="#" class="social-icon" target="_blank">
+      <i class="bi bi-github"></i>
+    </a>
+    <a href="#" class="social-icon" target="_blank">
+      <i class="bi bi-twitter"></i>
+    </a>
+  </div>
+</div>
+
+<div class="col-lg-7">
+  <div class="card border-0 rounded-3 shadow">
+    <div class="card-body p-4">
+      <form>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="name" class="form-label">Your Name</label>
+            <input type="text" class="form-control" id="name" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">Your Email</label>
+            <input type="email" class="form-control" id="email" required>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="subject" class="form-label">Subject</label>
+          <input type="text" class="form-control" id="subject" required>
+        </div>
+        <div class="mb-3">
+          <label for="message" class="form-label">Message</label>
+          <textarea class="form-control" id="message" rows="5" required></textarea>
+        </div>
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary btn-lg px-4">Send Message</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</section>
+<!-- CONTACT SECTION END -->
+
+<!-- FOOTER START -->
+<footer>
+<div class="container">
+<div class="row">
+<div class="col-md-12 text-center">
+  <p class="mb-0">&copy; 2025 Jordy Alfaro | Data Scientist & Mathematics Educator</p>
+</div>
+</div>
+</div>
+</footer>
+<!-- FOOTER END -->
+
+<!-- SCROLL TO TOP BUTTON -->
+<div class="scroll-top" id="scrollTop">
+<i class="bi bi-arrow-up"></i>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script>
+// Scroll to top button
+const scrollTopBtn = document.getElementById('scrollTop');
+
+window.addEventListener('scroll', function() {
+if (window.pageYOffset > 300) {
+scrollTopBtn.classList.add('active');
+} else {
+scrollTopBtn.classList.remove('active');
+}
+});
+
+scrollTopBtn.addEventListener('click', function() {
+window.scrollTo({
+top: 0,
+behavior: 'smooth'
+});
+});
+
+// Smooth scrolling for navigation links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+anchor.addEventListener('click', function(e) {
+e.preventDefault();
+
+const targetId = this.getAttribute('href');
+if (targetId === '#') return;
+
+const targetElement = document.querySelector(targetId);
+if (targetElement) {
+  window.scrollTo({
+    top: targetElement.offsetTop - 70,
+    behavior: 'smooth'
+  });
+  
+  // Close mobile menu if open
+  const navbarCollapse = document.querySelector('.navbar-collapse');
+  if (navbarCollapse.classList.contains('show')) {
+    document.querySelector('.navbar-toggler').click();
+  }
+}
+});
+});
+
+// Active nav link on scroll
+const sections = document.querySelectorAll('section');
+const navLinks = document.querySelectorAll('.nav-link');
+
+window.addEventListener('scroll', function() {
+let current = '';
+
+sections.forEach(section => {
+const sectionTop = section.offsetTop - 100;
+const sectionHeight = section.clientHeight;
+
+if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
+  current = section.getAttribute('id');
+}
+});
+
+navLinks.forEach(link => {
+link.classList.remove('active');
+if (link.getAttribute('href') === '#' + current) {
+  link.classList.add('active');
+}
+});
+});
+
+// Animation on scroll
+const animateElements = document.querySelectorAll('.animate');
+
+function checkPosition() {
+for (let i = 0; i < animateElements.length; i++) {
+let element = animateElements[i];
+let positionFromTop = animateElements[i].getBoundingClientRect().top;
+
+if (positionFromTop - window.innerHeight <= -100) {
+  element.classList.add('active');
+}
+}
+}
+
+window.addEventListener('scroll', checkPosition);
+window.addEventListener('resize', checkPosition);
+window.addEventListener('load', checkPosition);
+</script>
+</body>
+</html>
