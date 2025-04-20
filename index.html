@@ -3,19 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jordy Alfaro - Data Scientist & Mathematics Educator specializing in statistical modeling, machine learning, and data visualization">
+  <meta name="keywords" content="data science, machine learning, R programming, Python, statistical analysis, portfolio, mathematics">
+  <meta name="author" content="Jordy Alfaro Brenes">
   <title>Jordy Alfaro | Data Scientist Portfolio</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images/favicon.png">
   <!-- Bootstrap CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- AOS Animation Library -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <style>
     :root {
       --primary-color: #0d6efd;
+      --primary-dark: #0b5ed7;
       --secondary-color: #6c757d;
       --dark-color: #212529;
       --light-color: #f8f9fa;
       --accent-color: #17a2b8;
+      --success-color: #198754;
+      --warning-color: #ffc107;
+      --danger-color: #dc3545;
+      --transition-standard: all 0.3s ease;
     }
     
     body {
@@ -27,23 +39,57 @@
       background-color: #f9f9f9;
     }
     
+    /* Scrollbar customization */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
+    }
+    
+    /* Text selection color */
+    ::selection {
+      background: var(--primary-color);
+      color: white;
+    }
+    
     .navbar {
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+      transition: var(--transition-standard);
       padding: 10px 0;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      background-color: rgba(255, 255, 255, 0.95);
     }
     
     .navbar-brand {
       font-weight: 700;
       font-size: 1.5rem;
       color: var(--primary-color) !important;
+      letter-spacing: 0.5px;
     }
     
     .nav-link {
       font-weight: 500;
-      transition: color 0.3s ease;
+      transition: var(--transition-standard);
       margin: 0 5px;
       position: relative;
+      padding: 8px 15px;
+      border-radius: 5px;
+    }
+    
+    .nav-link:hover {
+      color: var(--primary-color);
     }
     
     .nav-link:after {
@@ -58,6 +104,15 @@
     }
     
     .nav-link:hover:after {
+      width: 100%;
+    }
+    
+    .nav-link.active {
+      color: var(--primary-color) !important;
+      font-weight: 600;
+    }
+    
+    .nav-link.active:after {
       width: 100%;
     }
     
@@ -83,22 +138,101 @@
       background-color: var(--primary-color);
       bottom: -10px;
       left: 25%;
+      border-radius: 3px;
+    }
+    
+    /* Button styles */
+    .btn {
+      border-radius: 30px;
+      padding: 10px 25px;
+      font-weight: 500;
+      transition: var(--transition-standard);
+      letter-spacing: 0.5px;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      border-color: var(--primary-dark);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
+    }
+    
+    .btn-outline-primary {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+    
+    .btn-outline-primary:hover {
+      background-color: var(--primary-color);
+      color: white;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
+    }
+    
+    .btn-light {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-light:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-outline-light:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
     }
     
     /* Hero Section */
     .hero-section {
-      background: linear-gradient(to right, rgba(13, 110, 253, 0.9), rgba(23, 162, 184, 0.9)), url('images/hero-bg.jpg');
+      background: linear-gradient(135deg, rgba(13, 110, 253, 0.9), rgba(23, 162, 184, 0.9)), url('images/hero-bg.jpg');
       background-size: cover;
       background-position: center;
+      background-attachment: fixed;
       color: white;
       text-align: center;
-      padding: 150px 0;
+      padding: 180px 0;
       position: relative;
+      overflow: hidden;
     }
     
     .hero-content {
       max-width: 800px;
       margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .hero-section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('images/pattern.png');
+      opacity: 0.1;
+      z-index: 1;
+    }
+    
+    .hero-title {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .hero-subtitle {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      font-weight: 400;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
     }
     
     .typed-text {
@@ -117,12 +251,13 @@
       object-fit: cover;
       border-radius: 50%;
       border: 5px solid var(--primary-color);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
+      box-shadow: 0 10px 25px rgba(13, 110, 253, 0.3);
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
     }
     
     .about-img:hover {
       transform: scale(1.05);
+      box-shadow: 0 15px 35px rgba(13, 110, 253, 0.4);
     }
     
     .about-text {
@@ -134,61 +269,130 @@
     /* Projects Section */
     .projects-section {
       background-color: #f5f7fa;
+      position: relative;
+    }
+    
+    .projects-section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      opacity: 0.7;
     }
     
     .project-card {
       border-radius: 15px;
       overflow: hidden;
       box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
       height: 100%;
+      background-color: white;
+      border: none;
     }
     
     .project-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+      transform: translateY(-15px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
     
     .project-img {
       height: 200px;
       object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    
+    .project-card:hover .project-img {
+      transform: scale(1.05);
+    }
+    
+    .project-card .card-body {
+      padding: 1.5rem;
+    }
+    
+    .project-card .card-title {
+      font-size: 1.35rem;
+      margin-bottom: 1rem;
+      color: var(--dark-color);
+      position: relative;
+      padding-bottom: 10px;
+    }
+    
+    .project-card .card-title::after {
+      content: '';
+      position: absolute;
+      width: 50px;
+      height: 3px;
+      background-color: var(--primary-color);
+      bottom: 0;
+      left: 0;
+      border-radius: 3px;
+    }
+    
+    .project-card .card-text {
+      color: #555;
+      font-size: 0.95rem;
+      line-height: 1.6;
     }
     
     .project-link {
       display: inline-block;
       margin: 5px;
-      padding: 5px 15px;
-      border-radius: 20px;
+      padding: 8px 18px;
+      border-radius: 25px;
       font-size: 0.9rem;
       font-weight: 500;
       color: white;
       background-color: var(--primary-color);
       text-decoration: none;
       transition: all 0.3s ease;
+      box-shadow: 0 3px 10px rgba(13, 110, 253, 0.2);
     }
     
     .project-link:hover {
-      background-color: #0b5ed7;
-      transform: scale(1.05);
+      background-color: var(--primary-dark);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
     }
     
     /* Skills Section */
     .skills-section {
       background-color: white;
+      position: relative;
     }
     
     .skill-card {
-      padding: 30px 20px;
+      padding: 30px 25px;
       border-radius: 15px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.05);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       height: 100%;
       background-color: #fff;
+      border: 1px solid rgba(0,0,0,0.03);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .skill-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 0;
+      background-color: var(--primary-color);
+      transition: height 0.3s ease;
+    }
+    
+    .skill-card:hover::before {
+      height: 100%;
     }
     
     .skill-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      transform: translateY(-10px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     }
     
     .skill-icon {
@@ -196,37 +400,188 @@
       height: 80px;
       object-fit: contain;
       margin-bottom: 20px;
-      transition: transform 0.3s ease;
+      transition: transform 0.5s ease;
     }
     
     .skill-card:hover .skill-icon {
-      transform: scale(1.1);
+      transform: scale(1.15);
     }
     
     .skill-title {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       font-weight: 600;
       margin-bottom: 15px;
       color: var(--primary-color);
+      transition: var(--transition-standard);
+    }
+    
+    .skill-card:hover .skill-title {
+      transform: translateX(10px);
+    }
+    
+    /* Experience Section */
+    .experience-section {
+      background-color: #f5f7fa;
+      position: relative;
+    }
+    
+    /* Timeline for education/experience */
+    .timeline {
+      position: relative;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .timeline::after {
+      content: '';
+      position: absolute;
+      width: 3px;
+      background-color: var(--primary-color);
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      margin-left: -1.5px;
+      border-radius: 3px;
+    }
+    
+    .timeline-item {
+      padding: 10px 40px;
+      position: relative;
+      width: 50%;
+      box-sizing: border-box;
+    }
+    
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background-color: white;
+      border: 4px solid var(--primary-color);
+      top: 15px;
+      border-radius: 50%;
+      z-index: 1;
+      box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+      transition: var(--transition-standard);
+    }
+    
+    .timeline-item:hover::after {
+      background-color: var(--primary-color);
+      transform: scale(1.1);
+    }
+    
+    .timeline-left {
+      left: 0;
+    }
+    
+    .timeline-right {
+      left: 50%;
+    }
+    
+    .timeline-left::after {
+      right: -11px;
+    }
+    
+    .timeline-right::after {
+      left: -11px;
+    }
+    
+    .timeline-content {
+      padding: 25px;
+      background-color: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .timeline-content:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+    }
+    
+    .timeline-content h4 {
+      margin-bottom: 10px;
+      color: var(--primary-color);
+    }
+    
+    .timeline-content h5 {
+      margin-bottom: 15px;
+      font-size: 0.95rem;
+      opacity: 0.8;
+      font-weight: 500;
+    }
+    
+    /* Education Section */
+    .education-section {
+      background-color: white;
+    }
+    
+    .education-card,
+    .certification-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .education-card:hover,
+    .certification-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
     }
     
     /* Contact Section */
     .contact-section {
-      background: linear-gradient(135deg, #0d6efd, #17a2b8);
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
       color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .contact-section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('images/pattern.png');
+      opacity: 0.05;
+      z-index: 0;
+    }
+    
+    .contact-section .container {
+      position: relative;
+      z-index: 1;
     }
     
     .contact-info {
       display: flex;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       font-size: 1.1rem;
+      transition: var(--transition-standard);
+    }
+    
+    .contact-info:hover {
+      transform: translateX(5px);
     }
     
     .contact-info i {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       margin-right: 15px;
       color: white;
+      background-color: rgba(255,255,255,0.2);
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: var(--transition-standard);
+    }
+    
+    .contact-info:hover i {
+      background-color: rgba(255,255,255,0.3);
+      transform: scale(1.1);
     }
     
     .social-icon {
@@ -239,21 +594,13 @@
       background-color: rgba(255,255,255,0.2);
       margin: 0 10px;
       transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
     
     .social-icon:hover {
       background-color: white;
-      transform: translateY(-5px);
-    }
-    
-    .social-icon img {
-      width: 30px;
-      height: 30px;
-      transition: all 0.3s ease;
-    }
-    
-    .social-icon:hover img {
-      filter: brightness(0);
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
     }
     
     .social-icon i {
@@ -266,10 +613,30 @@
       color: var(--primary-color);
     }
     
-    .social-text {
-      display: block;
-      margin-top: 5px;
-      font-size: 0.9rem;
+    .contact-form .form-control {
+      border-radius: 10px;
+      padding: 12px 15px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border: none;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      transition: var(--transition-standard);
+    }
+    
+    .contact-form .form-control:focus {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+      background-color: white;
+    }
+    
+    .contact-form .form-label {
+  color: #333333;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+    
+    .contact-form button {
+      padding: 12px 30px;
+      font-weight: 600;
     }
     
     /* Footer */
@@ -278,6 +645,11 @@
       color: white;
       padding: 30px 0;
       text-align: center;
+    }
+    
+    footer p {
+      margin-bottom: 0;
+      opacity: 0.8;
     }
     
     /* Scroll to top button */
@@ -297,8 +669,9 @@
       cursor: pointer;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.3s ease;
+      transition: all 0.4s ease;
       z-index: 999;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
     
     .scroll-top.active {
@@ -306,78 +679,30 @@
       visibility: visible;
     }
     
+    .scroll-top:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    
     /* Animation */
-    .animate {
+    .animate-fade-up {
+      animation: fadeUp 0.8s ease forwards;
       opacity: 0;
-      transform: translateY(30px);
-      transition: all 0.5s ease;
     }
     
-    .animate.active {
-      opacity: 1;
-      transform: translateY(0);
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     
-    /* Timeline for education/experience */
-    .timeline {
-      position: relative;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    .timeline::after {
-      content: '';
-      position: absolute;
-      width: 2px;
-      background-color: var(--primary-color);
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      margin-left: -1px;
-    }
-    
-    .timeline-item {
-      padding: 10px 40px;
-      position: relative;
-      width: 50%;
-      box-sizing: border-box;
-    }
-    
-    .timeline-item::after {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      background-color: white;
-      border: 3px solid var(--primary-color);
-      top: 15px;
-      border-radius: 50%;
-      z-index: 1;
-    }
-    
-    .timeline-left {
-      left: 0;
-    }
-    
-    .timeline-right {
-      left: 50%;
-    }
-    
-    .timeline-left::after {
-      right: -10px;
-    }
-    
-    .timeline-right::after {
-      left: -10px;
-    }
-    
-    .timeline-content {
-      padding: 20px;
-      background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
+    /* Media Queries */
     @media screen and (max-width: 768px) {
       .timeline::after {
         left: 31px;
@@ -396,10 +721,55 @@
       .timeline-right {
         left: 0;
       }
+      
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      
+      .hero-subtitle {
+        font-size: 1.5rem;
+      }
+      
+      section {
+        padding: 80px 0;
+      }
+    }
+
+    /* Loading animation */
+    .page-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s, visibility 0.5s;
+    }
+    
+    .loader {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
+<!-- Page Loader -->
+<div class="page-loader">
+  <div class="loader"></div>
+</div>
 
 <!-- NAVIGATION BAR START -->
 <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
@@ -441,9 +811,9 @@
 <!-- HERO SECTION START -->
 <section id="home" class="hero-section">
   <div class="container">
-    <div class="hero-content">
-      <h1 class="display-3 fw-bold mb-4">Jordy Alfaro Brenes</h1>
-      <h2 class="fw-light mb-4">Data Scientist & Mathematics Educator</h2>
+    <div class="hero-content" data-aos="fade-up" data-aos-duration="1000">
+      <h1 class="hero-title fw-bold mb-4">Jordy Alfaro Brenes</h1>
+      <h2 class="hero-subtitle fw-light mb-4">Data Scientist & Mathematics Educator</h2>
       <p class="lead mb-5">Transforming complex data into actionable insights through statistical modeling, machine learning, and data visualization</p>
       <div>
         <a href="#projects" class="btn btn-light btn-lg me-3 px-4 py-2">View Projects</a>
@@ -459,14 +829,14 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-md-8 text-center">
-        <h2 class="display-4 fw-bold section-title">About Me</h2>
+        <h2 class="display-4 fw-bold section-title" data-aos="fade-up">About Me</h2>
       </div>
     </div>
     <div class="row align-items-center mt-5">
-      <div class="col-lg-4 text-center mb-4 mb-lg-0">
+      <div class="col-lg-4 text-center mb-4 mb-lg-0" data-aos="fade-right" data-aos-delay="200">
         <img src="images/about/1.jpg" alt="Jordy Alfaro" class="about-img">
       </div>
-      <div class="col-lg-8">
+      <div class="col-lg-8" data-aos="fade-left" data-aos-delay="400">
         <div class="about-text">
           I'm a Data Scientist with a strong mathematical foundation and expertise in statistical modeling, machine learning, and data visualization. My background in mathematics allows me to approach complex problems with precision and strategic thinking.
         </div>
@@ -480,8 +850,12 @@
         </div>
         
         <div class="mt-4">
-          <a href="CV_JORDY_NUEVO.pdf" class="btn btn-primary me-3" download>Download CV</a>
-          <a href="#contact" class="btn btn-outline-primary">Contact Me</a>
+          <a href="CV_JORDY_NUEVO.pdf" class="btn btn-primary me-3" download>
+            <i class="bi bi-download me-2"></i>Download CV
+          </a>
+          <a href="#contact" class="btn btn-outline-primary">
+            <i class="bi bi-envelope me-2"></i>Contact Me
+          </a>
         </div>
       </div>
     </div>
@@ -521,7 +895,7 @@
 </div>
 
       <!-- Project 2: Financial Sentiment Analysis -->
-<div class="col-md-6 col-lg-3">
+<div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
   <div class="project-card">
     <img src="images/projects/12.png" class="card-img-top project-img" alt="Financial Sentiment Analysis">
     <div class="card-body">
@@ -542,7 +916,7 @@
 </div>
 
       <!-- Project 3: Churn Prediction -->
-<div class="col-md-6 col-lg-3">
+<div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
   <div class="project-card">
     <img src="images/projects/4.png" class="card-img-top project-img" alt="Bank Customer Churn Prediction">
     <div class="card-body">
@@ -562,8 +936,8 @@
   </div>
 </div>
 
-      <!-- Project: Customer Classification -->
-<div class="col-md-6 col-lg-3">
+      <!-- Project 4: Customer Classification -->
+<div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
   <div class="project-card">
     <img src="images/projects/13.png" class="card-img-top project-img" alt="Customer Classification">
     <div class="card-body">
@@ -584,8 +958,10 @@
 </div>
 
     </div>
-    <div class="text-center mt-5">
-      <a href="#" class="btn btn-outline-primary btn-lg">View All Projects</a>
+    <div class="text-center mt-5" data-aos="fade-up" data-aos-delay="500">
+      <a href="#" class="btn btn-outline-primary btn-lg">
+        <i class="bi bi-grid-3x3-gap me-2"></i>View All Projects
+      </a>
     </div>
   </div>
 </section>
@@ -596,13 +972,13 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-md-8 text-center">
-        <h2 class="display-4 fw-bold section-title">Technical Skills</h2>
+        <h2 class="display-4 fw-bold section-title" data-aos="fade-up">Technical Skills</h2>
       </div>
     </div>
     <div class="row g-4 mt-4">
 
       <!-- Skill 1: Python -->
-      <div class="col-md-4 col-lg-3 mb-4">
+      <div class="col-md-4 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="100">
         <div class="skill-card text-center">
           <img src="images/skills/1.png" alt="Python Icon" class="skill-icon">
           <h5 class="skill-title">Python</h5>
@@ -613,7 +989,7 @@
       </div>
 
       <!-- Skill 2: R Programming -->
-      <div class="col-md-4 col-lg-3 mb-4">
+      <div class="col-md-4 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="200">
         <div class="skill-card text-center">
           <img src="images/skills/5.png" alt="R Icon" class="skill-icon">
           <h5 class="skill-title">R Programming</h5>
@@ -624,7 +1000,7 @@
       </div>
 
       <!-- Skill 3: SQL -->
-      <div class="col-md-4 col-lg-3 mb-4">
+      <div class="col-md-4 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="300">
         <div class="skill-card text-center">
           <img src="images/skills/3.png" alt="SQL Icon" class="skill-icon">
           <h5 class="skill-title">SQL & Databases</h5>
@@ -635,7 +1011,7 @@
       </div>
 
       <!-- Skill 4: Machine Learning -->
-      <div class="col-md-4 col-lg-3 mb-4">
+      <div class="col-md-4 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="400">
         <div class="skill-card text-center">
           <img src="images/skills/6.png" alt="Machine Learning Icon" class="skill-icon">
           <h5 class="skill-title">Machine Learning</h5>
@@ -646,7 +1022,7 @@
       </div>
 
       <!-- Skill 5: Data Visualization -->
-      <div class="col-md-4 col-lg-3 mb-4">
+      <div class="col-md-4 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="100">
         <div class="skill-card text-center">
           <img src="images/skills/2.png" alt="Data Visualization Icon" class="skill-icon">
           <h5 class="skill-title">Data Visualization</h5>
@@ -657,7 +1033,7 @@
       </div>
       
       <!-- Skill 6: Statistical Analysis -->
-      <div class="col-md-4 col-lg-3 mb-4">
+      <div class="col-md-4 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="200">
         <div class="skill-card text-center">
           <img src="images/skills/7.png" alt="Statistical Analysis Icon" class="skill-icon">
           <h5 class="skill-title">Statistical Analysis</h5>
@@ -668,7 +1044,7 @@
       </div>
       
       <!-- Skill 7: MATLAB -->
-      <div class="col-md-4 col-lg-3 mb-4">
+      <div class="col-md-4 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="300">
         <div class="skill-card text-center">
           <img src="images/skills/8.png" alt="MATLAB Icon" class="skill-icon">
           <h5 class="skill-title">MATLAB</h5>
@@ -679,7 +1055,7 @@
       </div>
       
       <!-- Skill 8: Big Data -->
-      <div class="col-md-4 col-lg-3 mb-4">
+      <div class="col-md-4 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="400">
         <div class="skill-card text-center">
           <img src="images/skills/9.png" alt="Big Data Icon" class="skill-icon">
           <h5 class="skill-title">Big Data</h5>
@@ -695,20 +1071,20 @@
 <!-- SKILLS SECTION END -->
 
 <!-- EXPERIENCE SECTION START -->
-<section id="experience" class="py-5" style="background-color: #f5f7fa;">
+<section id="experience" class="experience-section py-5">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-md-8 text-center">
-        <h2 class="display-4 fw-bold section-title">Professional Experience</h2>
+        <h2 class="display-4 fw-bold section-title" data-aos="fade-up">Professional Experience</h2>
       </div>
     </div>
     
     <div class="timeline mt-5">
       <!-- Experience Item 1 -->
-      <div class="timeline-item timeline-left">
+      <div class="timeline-item timeline-left" data-aos="fade-right" data-aos-delay="100">
         <div class="timeline-content">
           <h4 class="fw-bold text-primary">Freelance Data Science Consultant</h4>
-          <h5>Remote | 2023 - Present</h5>
+          <h5><i class="bi bi-geo-alt-fill me-2"></i>Remote | 2023 - Present</h5>
           <p>
             Providing data science consulting services for clients in education, marketing, and business sectors. Developing machine learning models for applications such as customer segmentation, churn prediction, and sentiment analysis.
           </p>
@@ -716,10 +1092,10 @@
       </div>
       
       <!-- Experience Item 2 -->
-      <div class="timeline-item timeline-right">
+      <div class="timeline-item timeline-right" data-aos="fade-left" data-aos-delay="200">
         <div class="timeline-content">
           <h4 class="fw-bold text-primary">Mathematics & Statistics Professor</h4>
-          <h5>Universidad Latinoamericana de Ciencia y Tecnología (ULACIT) | 2023 - Present</h5>
+          <h5><i class="bi bi-building me-2"></i>Universidad Latinoamericana de Ciencia y Tecnología (ULACIT) | 2023 - Present</h5>
           <p>
             Teaching descriptive and inferential statistics, numerical analysis with applications in R, Python, and MATLAB. Developing applied projects in business statistics and implementing data science tools in the teaching process.
           </p>
@@ -727,10 +1103,10 @@
       </div>
       
       <!-- Experience Item 3 -->
-      <div class="timeline-item timeline-left">
+      <div class="timeline-item timeline-left" data-aos="fade-right" data-aos-delay="300">
         <div class="timeline-content">
           <h4 class="fw-bold text-primary">Mathematics Teacher</h4>
-          <h5>Centro Educativo Cristiano Reformado | 2023</h5>
+          <h5><i class="bi bi-building me-2"></i>Centro Educativo Cristiano Reformado | 2023</h5>
           <p>
             Taught mathematics to high school students from 7th to 11th grade. Developed technology-based teaching strategies for mathematics education.
           </p>
@@ -738,10 +1114,10 @@
       </div>
       
       <!-- Experience Item 4 -->
-      <div class="timeline-item timeline-right">
+      <div class="timeline-item timeline-right" data-aos="fade-left" data-aos-delay="400">
         <div class="timeline-content">
           <h4 class="fw-bold text-primary">Secondary School Mathematics Teacher</h4>
-          <h5>EMVA High School | 2022</h5>
+          <h5><i class="bi bi-building me-2"></i>EMVA High School | 2022</h5>
           <p>
             Taught 7th and 8th grade mathematics, applying innovative teaching methods for complex mathematical concepts.
           </p>
@@ -753,20 +1129,20 @@
 <!-- EXPERIENCE SECTION END -->
 
 <!-- EDUCATION SECTION START -->
-<section id="education" class="py-5 bg-white">
+<section id="education" class="education-section py-5">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-md-8 text-center">
-        <h2 class="display-4 fw-bold section-title">Education & Certifications</h2>
+        <h2 class="display-4 fw-bold section-title" data-aos="fade-up">Education & Certifications</h2>
       </div>
     </div>
     
     <div class="row g-4 mt-5">
       <!-- Education Column -->
-      <div class="col-lg-6">
-        <h3 class="mb-4 text-primary">Academic Education</h3>
+      <div class="col-lg-6" data-aos="fade-right" data-aos-delay="100">
+        <h3 class="mb-4 text-primary"><i class="bi bi-mortarboard-fill me-2"></i>Academic Education</h3>
         
-        <div class="card mb-4 border-0 shadow-sm">
+        <div class="card mb-4 border-0 shadow-sm education-card">
           <div class="card-body">
             <div class="d-flex align-items-center mb-3">
               <i class="bi bi-mortarboard-fill text-primary me-3" style="font-size: 2rem;"></i>
@@ -781,7 +1157,7 @@
           </div>
         </div>
         
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm education-card">
           <div class="card-body">
             <div class="d-flex align-items-center mb-3">
               <i class="bi bi-mortarboard-fill text-primary me-3" style="font-size: 2rem;"></i>
@@ -798,10 +1174,10 @@
       </div>
       
       <!-- Certifications Column -->
-      <div class="col-lg-6">
-        <h3 class="mb-4 text-primary">Professional Development</h3>
+      <div class="col-lg-6" data-aos="fade-left" data-aos-delay="200">
+        <h3 class="mb-4 text-primary"><i class="bi bi-award-fill me-2"></i>Professional Development</h3>
         
-        <div class="card mb-3 border-0 shadow-sm">
+        <div class="card mb-3 border-0 shadow-sm certification-card">
           <div class="card-body">
             <div class="d-flex align-items-center mb-3">
               <i class="bi bi-award-fill text-primary me-3" style="font-size: 2rem;"></i>
@@ -813,7 +1189,7 @@
           </div>
         </div>
         
-        <div class="card mb-3 border-0 shadow-sm">
+        <div class="card mb-3 border-0 shadow-sm certification-card">
           <div class="card-body">
             <div class="d-flex align-items-center mb-3">
               <i class="bi bi-award-fill text-primary me-3" style="font-size: 2rem;"></i>
@@ -825,7 +1201,7 @@
           </div>
         </div>
         
-        <div class="card mb-3 border-0 shadow-sm">
+        <div class="card mb-3 border-0 shadow-sm certification-card">
           <div class="card-body">
             <div class="d-flex align-items-center mb-3">
               <i class="bi bi-award-fill text-primary me-3" style="font-size: 2rem;"></i>
@@ -837,7 +1213,7 @@
           </div>
         </div>
         
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm certification-card">
           <div class="card-body">
             <div class="d-flex align-items-center mb-3">
               <i class="bi bi-translate text-primary me-3" style="font-size: 2rem;"></i>
@@ -859,12 +1235,12 @@
 <div class="container">
 <div class="row justify-content-center">
 <div class="col-md-8 text-center">
-  <h2 class="display-4 fw-bold section-title">Get In Touch</h2>
+  <h2 class="display-4 fw-bold section-title" data-aos="fade-up">Get In Touch</h2>
 </div>
 </div>
 
 <div class="row g-4 mt-5">
-<div class="col-lg-5">
+<div class="col-lg-5" data-aos="fade-right" data-aos-delay="100">
   <div class="contact-info">
     <i class="bi bi-geo-alt-fill"></i>
     <span>Tibás, Costa Rica</span>
@@ -880,17 +1256,17 @@
   
   <h4 class="text-white mt-4 mb-3">Follow Me On</h4>
   <div class="d-flex flex-wrap">
-    <a href="https://www.linkedin.com/in/jab00/" class="social-icon" target="_blank">
+    <a href="https://www.linkedin.com/in/jab00/" class="social-icon" target="_blank" data-aos="fade-up" data-aos-delay="100">
       <i class="bi bi-linkedin"></i>
     </a>
-    <a href="https://github.com/JordyAB00" class="social-icon" target="_blank">
+    <a href="https://github.com/JordyAB00" class="social-icon" target="_blank" data-aos="fade-up" data-aos-delay="200">
       <i class="bi bi-github"></i>
     </a>
   </div>
 </div>
 
-<div class="col-lg-7">
-  <div class="card border-0 rounded-3 shadow">
+<div class="col-lg-7" data-aos="fade-left" data-aos-delay="300">
+  <div class="card border-0 rounded-3 shadow contact-form">
     <div class="card-body p-4">
       <form action="https://formspree.io/f/xnnpedpn" method="POST">
         <div class="row">
@@ -913,7 +1289,9 @@
         </div>
         <input type="text" name="_gotcha" style="display:none">
         <div class="text-center">
-          <button type="submit" class="btn btn-primary btn-lg px-4">Send Message</button>
+          <button type="submit" class="btn btn-light btn-lg px-4">
+            <i class="bi bi-send me-2"></i>Send Message
+          </button>
         </div>
         <input type="hidden" name="_next" value="false">
       </form>
@@ -944,48 +1322,69 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- AOS Animation Library -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <!-- Custom JS -->
 <script>
+// Initialize AOS
+AOS.init({
+  duration: 800,
+  easing: 'ease-in-out',
+  once: true,
+  mirror: false
+});
+
+// Page loader
+window.addEventListener('load', function() {
+  const loader = document.querySelector('.page-loader');
+  setTimeout(function() {
+    loader.style.opacity = '0';
+    setTimeout(function() {
+      loader.style.display = 'none';
+    }, 500);
+  }, 500);
+});
+
 // Scroll to top button
 const scrollTopBtn = document.getElementById('scrollTop');
 
 window.addEventListener('scroll', function() {
-if (window.pageYOffset > 300) {
-scrollTopBtn.classList.add('active');
-} else {
-scrollTopBtn.classList.remove('active');
-}
+  if (window.pageYOffset > 300) {
+    scrollTopBtn.classList.add('active');
+  } else {
+    scrollTopBtn.classList.remove('active');
+  }
 });
 
 scrollTopBtn.addEventListener('click', function() {
-window.scrollTo({
-top: 0,
-behavior: 'smooth'
-});
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 });
 
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-anchor.addEventListener('click', function(e) {
-e.preventDefault();
+  anchor.addEventListener('click', function(e) {
+    e.preventDefault();
 
-const targetId = this.getAttribute('href');
-if (targetId === '#') return;
+    const targetId = this.getAttribute('href');
+    if (targetId === '#') return;
 
-const targetElement = document.querySelector(targetId);
-if (targetElement) {
-  window.scrollTo({
-    top: targetElement.offsetTop - 70,
-    behavior: 'smooth'
+    const targetElement = document.querySelector(targetId);
+    if (targetElement) {
+      window.scrollTo({
+        top: targetElement.offsetTop - 70,
+        behavior: 'smooth'
+      });
+      
+      // Close mobile menu if open
+      const navbarCollapse = document.querySelector('.navbar-collapse');
+      if (navbarCollapse.classList.contains('show')) {
+        document.querySelector('.navbar-toggler').click();
+      }
+    }
   });
-  
-  // Close mobile menu if open
-  const navbarCollapse = document.querySelector('.navbar-collapse');
-  if (navbarCollapse.classList.contains('show')) {
-    document.querySelector('.navbar-toggler').click();
-  }
-}
-});
 });
 
 // Active nav link on scroll
@@ -993,81 +1392,63 @@ const sections = document.querySelectorAll('section');
 const navLinks = document.querySelectorAll('.nav-link');
 
 window.addEventListener('scroll', function() {
-let current = '';
+  let current = '';
 
-sections.forEach(section => {
-const sectionTop = section.offsetTop - 100;
-const sectionHeight = section.clientHeight;
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop - 100;
+    const sectionHeight = section.clientHeight;
 
-if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
-  current = section.getAttribute('id');
-}
+    if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
+      current = section.getAttribute('id');
+    }
+  });
+
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) {
+      link.classList.add('active');
+    }
+  });
 });
 
-navLinks.forEach(link => {
-link.classList.remove('active');
-if (link.getAttribute('href') === '#' + current) {
-  link.classList.add('active');
-}
-});
-});
-
-// Animation on scroll
-const animateElements = document.querySelectorAll('.animate');
-
-function checkPosition() {
-for (let i = 0; i < animateElements.length; i++) {
-let element = animateElements[i];
-let positionFromTop = animateElements[i].getBoundingClientRect().top;
-
-if (positionFromTop - window.innerHeight <= -100) {
-  element.classList.add('active');
-}
-}
-}
-
-window.addEventListener('scroll', checkPosition);
-window.addEventListener('resize', checkPosition);
-window.addEventListener('load', checkPosition);
-</script>
-<script>
-  const form = document.querySelector('form[action^="https://formspree.io"]');
-  if (form) {
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const data = new FormData(form);
-      fetch(form.action, {
-        method: 'POST',
-        body: data,
-        headers: {
-          'Accept': 'application/json'
-        }
-      })
-      .then(response => {
-        if (response.ok) {
-          // Mostrar mensaje de agradecimiento
-          form.innerHTML = `
-            <div class="alert alert-success text-center" role="alert">
-              <h4 class="alert-heading">Thank you for your message!</h4>
-              <p>I will get back to you as soon as possible.</p>
-            </div>
-          `;
-        } else {
-          response.json().then(data => {
-            if (Object.hasOwn(data, 'errors')) {
-              const errorMsg = data["errors"].map(error => error["message"]).join(", ");
-              alert("Oops! There was a problem: " + errorMsg);
-            } else {
-              alert("Oops! There was a problem submitting your form");
-            }
-          });
-        }
-      })
-      .catch(error => {
-        alert("Oops! There was a problem submitting your form");
-      });
+// Contact form handling
+const form = document.querySelector('form[action^="https://formspree.io"]');
+if (form) {
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const data = new FormData(form);
+    fetch(form.action, {
+      method: 'POST',
+      body: data,
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Show thank you message
+        form.innerHTML = `
+          <div class="alert alert-success text-center" role="alert">
+            <h4 class="alert-heading"><i class="bi bi-check-circle me-2"></i>Thank you for your message!</h4>
+            <p>I will get back to you as soon as possible.</p>
+          </div>
+        `;
+      } else {
+        response.json().then(data => {
+          if (Object.hasOwn(data, 'errors')) {
+            const errorMsg = data["errors"].map(error => error["message"]).join(", ");
+            alert("Oops! There was a problem: " + errorMsg);
+          } else {
+            alert("Oops! There was a problem submitting your form");
+          }
+        });
+      }
+    })
+    .catch(error => {
+      alert("Oops! There was a problem submitting your form");
     });
-  }
+  });
+}
 </script>
 </body>
 </html>
