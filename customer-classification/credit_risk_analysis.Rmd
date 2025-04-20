@@ -1,0 +1,1237 @@
+---
+title: "Customer Classification: Credit Risk Analysis"
+author: "Jordy Alfaro"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_depth: 3
+    df_print: paged
+    code_folding: hide
+    theme: cosmo
+    highlight: tango
+    fig.align: 'center'
+    fig.width: 10
+    fig.height: 6
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE, 
+  message = FALSE,
+  fig.align = 'center',
+  fig.width = 10,
+  fig.height = 6
+)
+
+# Load required libraries
+library(tidyverse)      # For data manipulation and visualization
+library(caret)          # For model training and evaluation
+library(randomForest)   # For Random Forest model
+library(rpart)          # For Decision Trees
+library(rpart.plot)     # For plotting decision trees
+library(e1071)          # For Naive Bayes model
+library(ROCR)           # For ROC curves
+library(corrplot)       # For correlation matrices
+library(neuralnet)      # For Neural Networks
+library(gridExtra)      # For arranging multiple plots
+library(scales)         # For scale formatting
+library(viridis)        # For color palettes
+library(knitr)          # For tables
+library(kableExtra)     # For enhanced tables
+library(pROC)           # For ROC analysis
+```
+
+# Introduction
+
+## Credit Risk Analysis Context
+
+In the financial sector, predicting whether a borrower will default on a loan is a critical task with significant business implications. This analysis focuses on developing a classification model to predict loan defaults based on customer characteristics and loan attributes.
+
+Credit risk assessment is essential for:
+
+1. **Risk Management**: Minimizing potential losses from loan defaults
+2. **Customer Selection**: Identifying creditworthy applicants
+3. **Portfolio Optimization**: Maintaining a healthy balance of risk and return
+4. **Regulatory Compliance**: Meeting financial industry standards for risk assessment
+
+This analysis will employ multiple machine learning approaches, including Random Forest, Neural Networks, and Naive Bayes, to develop a robust classification system. The resulting model will enable more informed lending decisions, potentially reducing default rates while maintaining loan accessibility for qualified customers.
+
+## Dataset Description
+
+The dataset contains information on loan applicants and their loan status, with the following key variables:
+
+**Customer Demographics**:
+- `person_age`: Age of the applicant
+- `person_income`: Annual income
+- `person_home_ownership`: Housing status (RENT, MORTGAGE, OWN, OTHER)
+- `person_emp_length`: Employment length in years
+- `cb_person_default_on_file`: Whether the person has defaulted in the past (Y/N)
+- `cb_person_cred_hist_length`: Length of credit history in years
+
+**Loan Characteristics**:
+- `loan_intent`: Purpose of the loan (EDUCATION, MEDICAL, VENTURE, PERSONAL, HOMEIMPROVEMENT, DEBTCONSOLIDATION)
+- `loan_grade`: Loan grade assigned by the lender (A to G)
+- `loan_amnt`: Loan amount
+- `loan_int_rate`: Interest rate
+- `loan_percent_income`: Ratio of loan amount to income
+
+**Target Variable**:
+- `loan_status`: Whether the loan defaulted (1) or not (0)
+
+## Business Objectives
+
+Through this analysis, we aim to:
+
+1. Identify key factors that influence loan default risk
+2. Develop a predictive model that accurately classifies high-risk applicants
+3. Compare different modeling approaches to determine the most effective for credit risk prediction
+4. Create an actionable framework for loan approval decisions
+5. Quantify the potential business impact of implementing the model
+
+The insights gained will support data-driven lending strategies that balance risk mitigation with business growth objectives.
+
+# Data Loading and Sampling
+
+To ensure computational efficiency while maintaining statistical validity, we work with a randomly selected sample of 10,000 observations from the original credit risk dataset.
+
+```{r sample-data}
+# Set seed for reproducibility
+set.seed(123)
+
+# Load the original data
+credit_data <- read.csv("credit_risk_dataset.csv")
+
+# Take a sample of 10,000 observations
+sample_indices <- sample(1:nrow(credit_data), 10000)
+credit_data <- credit_data[sample_indices, ]
+
+# Verify dimensions of the sample
+cat("Sample dimensions:", dim(credit_data), "\n")
+```
+
+# Data Exploration and Preparation
+
+## Initial Data Inspection
+
+```{r load-data}
+# Display the structure of the dataset
+str(credit_data)
+
+# View the first few rows
+head(credit_data)
+
+# Check dimensions
+cat("Number of observations:", nrow(credit_data), "\n")
+cat("Number of variables:", ncol(credit_data), "\n")
+
+# Check for missing values
+missing_values <- colSums(is.na(credit_data))
+cat("Missing values per column:\n")
+print(missing_values)
+```
+
+## Data Cleaning and Preparation
+
+```{r data-cleaning}
+# Make a copy of the original data
+clean_data <- credit_data
+
+# Check for missing values before proceeding
+missing_values <- colSums(is.na(clean_data))
+cat("Missing values per column before cleaning:\n")
+print(missing_values)
+
+# Handle missing values where necessary
+# For employment length, replace NA with median
+if(sum(is.na(clean_data$person_emp_length)) > 0) {
+  clean_data$person_emp_length[is.na(clean_data$person_emp_length)] <- 
+    median(clean_data$person_emp_length, na.rm = TRUE)
+}
+
+# For interest rate, replace NA with median per loan grade
+if(sum(is.na(clean_data$loan_int_rate)) > 0) {
+  # Group by loan grade and impute with median
+  medians_by_grade <- clean_data %>%
+    group_by(loan_grade) %>%
+    summarise(median_rate = median(loan_int_rate, na.rm = TRUE))
+  
+  # Apply imputation
+  for(grade in unique(clean_data$loan_grade)) {
+    median_for_grade <- medians_by_grade$median_rate[medians_by_grade$loan_grade == grade]
+    idx <- is.na(clean_data$loan_int_rate) & clean_data$loan_grade == grade
+    clean_data$loan_int_rate[idx] <- median_for_grade
+  }
+}
+
+# Check remaining missing values after imputation
+missing_values_after <- colSums(is.na(clean_data))
+cat("Missing values per column after imputation:\n")
+print(missing_values_after)
+
+# Convert categorical variables to factors
+clean_data$person_home_ownership <- as.factor(clean_data$person_home_ownership)
+clean_data$loan_intent <- as.factor(clean_data$loan_intent)
+clean_data$loan_grade <- as.factor(clean_data$loan_grade)
+clean_data$cb_person_default_on_file <- as.factor(clean_data$cb_person_default_on_file)
+clean_data$loan_status <- as.factor(clean_data$loan_status)
+
+# Rename factor levels to ensure they are valid R variable names
+levels(clean_data$loan_status) <- c("no_default", "default")
+
+# Check the new factor levels
+print(levels(clean_data$loan_status))
+
+# Check for and handle outliers in numerical variables
+numerical_vars <- c("person_age", "person_income", "person_emp_length", 
+                   "loan_amnt", "loan_int_rate", "loan_percent_income", 
+                   "cb_person_cred_hist_length")
+
+# Create a function to identify outliers using IQR method
+identify_outliers <- function(x) {
+  q1 <- quantile(x, 0.25, na.rm = TRUE)
+  q3 <- quantile(x, 0.75, na.rm = TRUE)
+  iqr <- q3 - q1
+  lower_bound <- q1 - 1.5 * iqr
+  upper_bound <- q3 + 1.5 * iqr
+  outliers <- sum(x < lower_bound | x > upper_bound, na.rm = TRUE)
+  return(c(lower_bound, upper_bound, outliers))
+}
+
+# Apply the function to numerical variables
+outlier_summary <- sapply(clean_data[numerical_vars], identify_outliers)
+rownames(outlier_summary) <- c("Lower Bound", "Upper Bound", "Outlier Count")
+kable(outlier_summary, caption = "Summary of Outliers by Numerical Variable") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+# Cap extreme values for person_income and loan_amnt (keeping the data but reducing extreme influence)
+clean_data$person_income <- pmin(clean_data$person_income, outlier_summary["Upper Bound", "person_income"])
+clean_data$loan_amnt <- pmin(clean_data$loan_amnt, outlier_summary["Upper Bound", "loan_amnt"])
+
+# Check for any logical inconsistencies or errors
+# Example: Check for unrealistic age values
+clean_data <- clean_data %>% filter(person_age >= 18 & person_age <= 100)
+
+# Create age groups for easier interpretation
+clean_data$age_group <- cut(clean_data$person_age, 
+                         breaks = c(18, 25, 35, 45, 55, 65, 100), 
+                         labels = c("18-25", "26-35", "36-45", "46-55", "56-65", "65+"),
+                         right = FALSE)
+
+# Create income groups
+clean_data$income_group <- cut(clean_data$person_income, 
+                            breaks = c(0, 25000, 50000, 75000, 100000, 1000000), 
+                            labels = c("<25K", "25K-50K", "50K-75K", "75K-100K", "100K+"),
+                            right = FALSE)
+
+# Create loan amount groups
+clean_data$loan_amount_group <- cut(clean_data$loan_amnt, 
+                                 breaks = c(0, 5000, 10000, 15000, 20000, 30000, 50000), 
+                                 labels = c("<5K", "5K-10K", "10K-15K", "15K-20K", "20K-30K", "30K+"),
+                                 right = FALSE)
+
+# Summarize the cleaned dataset
+cat("Observations after cleaning:", nrow(clean_data), "\n")
+cat("Original observations:", nrow(credit_data), "\n")
+cat("Removed observations:", nrow(credit_data) - nrow(clean_data), "\n")
+```
+
+## Data Cleaning and Preprocessing Summary
+
+Our initial inspection revealed missing values in two key variables:
+
+- Employment length: 283 missing values (2.83%)
+- Interest rate: 939 missing values (9.39%)
+
+We implemented an imputation strategy:
+- For employment length, missing values were replaced with the median value
+- For interest rate, we imputed values based on the median rate for each loan grade
+
+The outlier analysis using the IQR method identified:
+- Annual income: 484 outliers (4.84%), with an upper bound of $138,650
+- Loan amount: 504 outliers (5.04%), with an upper bound of $22,500
+
+To mitigate the impact of extreme values while preserving valid observations, we applied capping to income and loan amount variables.
+
+## Exploratory Data Analysis
+
+### Target Variable Distribution
+
+```{r univariate-analysis-target}
+# Analyze the distribution of the target variable
+target_dist <- clean_data %>%
+  count(loan_status) %>%
+  mutate(percentage = n / sum(n) * 100)
+
+ggplot(target_dist, aes(x = loan_status, y = n, fill = loan_status)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(round(percentage, 1), "%")), 
+            position = position_stack(vjust = 0.5), 
+            color = "white", size = 5, fontface = "bold") +
+  scale_fill_manual(values = c("no_default" = "#2ecc71", "default" = "#e74c3c")) +
+  labs(title = "Distribution of Loan Status",
+       x = "Loan Status",
+       y = "Count") +
+  theme_minimal(base_size = 14) +
+  theme(legend.title = element_blank(),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 16))
+```
+
+The dataset exhibits a class imbalance, with 77.9% of loans performing normally ("no_default") and 22.1% resulting in default. This imbalance reflects real-world credit risk distributions and creates challenges for model development.
+
+### Numerical Variables
+
+```{r univariate-analysis-numerical}
+# Visualize key numerical variables
+p1 <- ggplot(clean_data, aes(x = person_age)) +
+  geom_histogram(bins = 30, fill = "#3498db", color = "white", alpha = 0.8) +
+  labs(title = "Age Distribution", x = "Age", y = "Count") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+p2 <- ggplot(clean_data %>% filter(person_income < quantile(person_income, 0.99)), 
+             aes(x = person_income)) +
+  geom_histogram(bins = 30, fill = "#2ecc71", color = "white", alpha = 0.8) +
+  labs(title = "Income Distribution (99th percentile)", x = "Annual Income ($)", y = "Count") +
+  scale_x_continuous(labels = comma) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+p3 <- ggplot(clean_data, aes(x = loan_amnt)) +
+  geom_histogram(bins = 30, fill = "#9b59b6", color = "white", alpha = 0.8) +
+  labs(title = "Loan Amount Distribution", x = "Loan Amount ($)", y = "Count") +
+  scale_x_continuous(labels = comma) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+p4 <- ggplot(clean_data, aes(x = loan_int_rate)) +
+  geom_histogram(bins = 30, fill = "#e74c3c", color = "white", alpha = 0.8) +
+  labs(title = "Interest Rate Distribution", x = "Interest Rate (%)", y = "Count") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+# Arrange plots in a grid
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+Key observations from numerical variables:
+
+- **Age Distribution**: Predominantly young to middle-aged borrowers with concentration in the 25-35 range
+- **Income Distribution**: Right-skewed pattern with most borrowers reporting annual incomes between $40,000 and $80,000
+- **Loan Amount**: Multimodal distribution with peaks around $6,000, $10,000, and $20,000
+- **Interest Rate**: Range predominantly between 7% and 15%, with notable frequency peaks at approximately 7.5% and 11%
+
+### Categorical Variables
+
+```{r univariate-analysis-categorical}
+# Visualize categorical variables
+p5 <- ggplot(clean_data, aes(x = fct_infreq(person_home_ownership), fill = person_home_ownership)) +
+  geom_bar() +
+  scale_fill_viridis_d(option = "D", begin = 0.3, end = 0.7) +
+  labs(title = "Home Ownership Distribution", x = "Home Ownership", y = "Count") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        legend.position = "none")
+
+p6 <- ggplot(clean_data, aes(x = fct_infreq(loan_intent), fill = loan_intent)) +
+  geom_bar() +
+  scale_fill_viridis_d(option = "D", begin = 0.3, end = 0.7) +
+  labs(title = "Loan Intent Distribution", x = "Loan Intent", y = "Count") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+p7 <- ggplot(clean_data, aes(x = fct_infreq(loan_grade), fill = loan_grade)) +
+  geom_bar() +
+  scale_fill_viridis_d(option = "D", begin = 0.3, end = 0.7) +
+  labs(title = "Loan Grade Distribution", x = "Loan Grade", y = "Count") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        legend.position = "none")
+
+p8 <- ggplot(clean_data, aes(x = fct_infreq(cb_person_default_on_file), fill = cb_person_default_on_file)) +
+  geom_bar() +
+  scale_fill_viridis_d(option = "D", begin = 0.3, end = 0.7) +
+  labs(title = "Previous Default Distribution", x = "Previous Default", y = "Count") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        legend.position = "none")
+
+# Arrange categorical plots
+grid.arrange(p5, p6, p7, p8, ncol = 2)
+```
+
+Key observations from categorical variables:
+
+- **Home Ownership**: Most applicants are renters (approximately 50%), followed by mortgage holders (about 41%)
+- **Loan Intent**: Relatively even distribution across categories, with slightly higher frequencies for education and medical purposes
+- **Loan Grade**: Heavily weighted toward higher quality ratings (A and B), with progressive decrease through grades C through G
+- **Previous Default**: Approximately 85% of applicants had no prior defaults, while about 15% had defaulted previously
+
+### Bivariate Analysis: Relationship with Target
+
+```{r bivariate-analysis}
+# Function to create comparison plots
+create_barplot <- function(data, var_name, title, x_label = NULL) {
+  if(is.null(x_label)) x_label <- var_name
+  
+  ggplot(data, aes_string(x = var_name, fill = "loan_status")) +
+    geom_bar(position = "fill") +
+    scale_fill_manual(values = c("no_default" = "#2ecc71", "default" = "#e74c3c")) +
+    labs(title = title, x = x_label, y = "Proportion", fill = "Loan Status") +
+    theme_minimal(base_size = 12) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      legend.position = "right"
+    )
+}
+
+# Create key comparison visualizations
+age_plot <- create_barplot(clean_data, "age_group", "Default Rate by Age Group", "Age Group")
+income_plot <- create_barplot(clean_data, "income_group", "Default Rate by Income Group", "Income Group")
+loan_amt_plot <- create_barplot(clean_data, "loan_amount_group", "Default Rate by Loan Amount", "Loan Amount")
+ownership_plot <- create_barplot(clean_data, "person_home_ownership", "Default Rate by Home Ownership", "Home Ownership")
+
+# Arrange plots in grid
+grid.arrange(age_plot, income_plot, loan_amt_plot, ownership_plot, ncol = 2)
+
+# Additional comparison plots
+intent_plot <- create_barplot(clean_data, "loan_intent", "Default Rate by Loan Intent", "Loan Intent")
+grade_plot <- create_barplot(clean_data, "loan_grade", "Default Rate by Loan Grade", "Loan Grade")
+prev_default_plot <- create_barplot(clean_data, "cb_person_default_on_file", "Default Rate by Previous Default History", "Previous Default")
+
+# Create a boxplot for interest rate by default status
+int_rate_plot <- ggplot(clean_data, aes(x = loan_status, y = loan_int_rate, fill = loan_status)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("no_default" = "#2ecc71", "default" = "#e74c3c")) +
+  labs(title = "Interest Rate by Loan Status",
+       x = "Loan Status",
+       y = "Interest Rate (%)") +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "none"
+  )
+
+# Arrange second set of plots
+grid.arrange(intent_plot, grade_plot, prev_default_plot, int_rate_plot, ncol = 2)
+```
+
+Key insights from bivariate analysis:
+
+- **Age and Default Risk**: Relatively consistent across most age ranges (22-25%), with higher default rates for borrowers in the 56-65 category (approximately 32%)
+- **Income and Default Risk**: Strong inverse relationship with lower-income borrowers (<$25K) showing dramatically higher default rates (55%), while higher-income groups have consistently low default rates around 10%
+- **Home Ownership and Default Risk**: Homeowners demonstrate the lowest default rate (approximately 8%), while renters and those in the "OTHER" category show substantially higher rates (33% and 42% respectively)
+- **Loan Amount and Default Risk**: Default rates increase steadily with loan size, from about 20% for smaller loans to over 35% for larger amounts
+- **Loan Intent and Default Risk**: Debt consolidation shows the highest risk (30%), while education loans demonstrate the lowest default rate (18%)
+- **Loan Grade and Default Risk**: Strong relationship with default, displaying a clear stepwise increase from grade A (8%) to grade G (nearly 100%)
+- **Previous Default History**: Borrowers with previous defaults show a significantly higher likelihood of defaulting again (40%) compared to those without prior defaults (18%)
+- **Interest Rate**: Substantially higher interest rates for defaulted loans (median ~14%) compared to performing loans (median ~10.5%)
+
+### Correlation Analysis
+
+```{r correlation-analysis}
+# Select numerical variables for correlation analysis
+numerical_vars <- c("person_age", "person_income", "person_emp_length", 
+                   "loan_amnt", "loan_int_rate", "loan_percent_income", 
+                   "cb_person_cred_hist_length")
+
+# Add the target variable as numeric for correlation calculation
+# First check if we can convert the factor to numeric correctly
+if(is.factor(clean_data$loan_status)) {
+  # Determine which level corresponds to "default"
+  default_level <- which(levels(clean_data$loan_status) == "default")
+  if(length(default_level) == 0) {
+    # If "default" is not found, assume the second level is positive class
+    default_level <- 2
+  }
+  
+  # Convert factor to numeric (1 for default, 0 for no_default)
+  loan_status_num <- as.integer(as.integer(clean_data$loan_status) == default_level)
+} else {
+  # Fallback if loan_status is not a factor
+  loan_status_num <- as.integer(clean_data$loan_status)
+}
+
+# Create correlation data and handle missing values
+correlation_data <- clean_data %>%
+  select(all_of(numerical_vars))
+
+# Add loan_status_num to correlation_data
+correlation_data$loan_status_num <- loan_status_num
+
+# Check for missing values in correlation data
+na_counts <- colSums(is.na(correlation_data))
+cat("Missing values in correlation data:\n")
+print(na_counts)
+
+# Handle missing values by imputation for correlation analysis only
+for(col in colnames(correlation_data)) {
+  if(sum(is.na(correlation_data[[col]])) > 0) {
+    # Impute NA with median for numerical columns
+    correlation_data[[col]][is.na(correlation_data[[col]])] <- 
+      median(correlation_data[[col]], na.rm = TRUE)
+  }
+}
+
+# Verify imputation worked
+na_counts_after <- colSums(is.na(correlation_data))
+cat("Missing values after imputation:\n")
+print(na_counts_after)
+
+# Calculate pairwise correlation matrix
+correlation <- cor(correlation_data)
+
+# Plot correlation matrix
+corrplot(correlation, 
+         method = "circle", 
+         type = "upper", 
+         order = "hclust",
+         addCoef.col = "black", 
+         tl.col = "black", 
+         tl.srt = 45,
+         diag = FALSE,
+         title = "Correlation Matrix of Numerical Variables",
+         mar = c(0,0,2,0))
+
+# Feature importance analysis - create simple models to assess variable importance
+# First, check for any NA values in the data
+na_count <- colSums(is.na(clean_data))
+print(na_count)
+
+# Remove rows with NA values or impute as needed
+clean_data_no_na <- clean_data %>% drop_na()
+cat("Original data rows:", nrow(clean_data), "\n")
+cat("Rows after removing NA values:", nrow(clean_data_no_na), "\n")
+
+# Now build the model using the data without NA values
+model_formula <- as.formula("loan_status ~ person_age + person_income + person_home_ownership + 
+                            person_emp_length + loan_intent + loan_grade + loan_amnt + 
+                            loan_int_rate + loan_percent_income + cb_person_default_on_file + 
+                            cb_person_cred_hist_length")
+
+# Random Forest for variable importance
+set.seed(123)
+rf_model <- randomForest(model_formula, data = clean_data_no_na, importance = TRUE, ntree = 100)
+
+# Plot variable importance
+varImpPlot(rf_model, 
+           sort = TRUE, 
+           main = "Variable Importance (Random Forest)",
+           n.var = 10,
+           cex = 0.8,
+           color = "#3498db")
+```
+
+Key insights from correlation analysis:
+
+- Strong positive correlation (0.88) between borrower age and credit history length
+- Moderate positive correlations between income and employment length (0.22) and loan amount (0.40)
+- Negative correlation (-0.38) between income and loan percent income
+- Moderate correlations between default status and income (-0.25), loan percent income (0.38), and interest rate (0.34)
+
+Feature importance analysis shows:
+
+- Mean Decrease Accuracy: Home ownership status, loan percent income, and loan intent emerge as top predictors
+- Mean Decrease Gini: Loan percent income stands out as the single most important predictor, followed by income, interest rate, and loan grade
+- Financial burden metrics and loan terms are more predictive than borrower demographics
+
+# Feature Engineering and Preprocessing
+
+```{r feature-engineering}
+# Create a dataset for modeling
+model_data <- clean_data
+
+# Make sure loan_status has proper factor levels
+if(is.factor(model_data$loan_status)) {
+  current_levels <- levels(model_data$loan_status)
+  if(any(current_levels %in% c("0", "1"))) {
+    levels(model_data$loan_status) <- c("no_default", "default")
+    cat("Loan status levels renamed to:", levels(model_data$loan_status), "\n")
+  }
+}
+
+# Create interaction features
+model_data$income_to_loan_ratio <- model_data$person_income / model_data$loan_amnt
+model_data$income_per_credit_year <- model_data$person_income / pmax(model_data$cb_person_cred_hist_length, 1)
+model_data$debt_to_income <- model_data$loan_percent_income * 100
+
+# Map loan_grade to numeric values
+grade_map <- c("A" = 1, "B" = 2, "C" = 3, "D" = 4, "E" = 5, "F" = 6, "G" = 7)
+model_data$grade_numeric <- grade_map[as.character(model_data$loan_grade)]
+model_data$risk_factor <- model_data$grade_numeric * model_data$loan_int_rate
+
+# One-hot encode categorical variables
+model_matrix <- model.matrix(~ person_home_ownership + loan_intent + loan_grade + cb_person_default_on_file - 1, data = model_data)
+
+# Combine with numerical variables
+model_data_encoded <- cbind(
+  model_data %>% select(person_age, person_income, person_emp_length, loan_amnt, 
+                       loan_int_rate, loan_percent_income, cb_person_cred_hist_length,
+                       income_to_loan_ratio, income_per_credit_year, debt_to_income, risk_factor,
+                       loan_status),
+  as.data.frame(model_matrix)
+)
+
+# Split into training and testing sets
+set.seed(123)
+train_index <- createDataPartition(model_data_encoded$loan_status, p = 0.7, list = FALSE)
+train_data <- model_data_encoded[train_index, ]
+test_data <- model_data_encoded[-train_index, ]
+
+# Verify dimensions
+cat("Training set dimensions:", dim(train_data), "\n")
+cat("Testing set dimensions:", dim(test_data), "\n")
+
+# Check the class distribution in training and testing sets
+train_class_dist <- table(train_data$loan_status)
+test_class_dist <- table(test_data$loan_status)
+
+cat("Class distribution in training set:\n")
+print(prop.table(train_class_dist))
+
+cat("Class distribution in testing set:\n")
+print(prop.table(test_class_dist))
+
+# Prepare predictors and target
+x_train <- train_data %>% select(-loan_status)
+y_train <- train_data$loan_status
+
+x_test <- test_data %>% select(-loan_status)
+y_test <- test_data$loan_status
+
+# Scale numerical features for models like Neural Network
+preprocess_params <- preProcess(x_train, method = c("center", "scale"))
+x_train_scaled <- predict(preprocess_params, x_train)
+x_test_scaled <- predict(preprocess_params, x_test)
+
+# Verify no NAs in the data
+sum(is.na(x_train))
+sum(is.na(x_test))
+```
+
+We implemented a comprehensive feature engineering approach:
+
+**Financial Ratios:**
+- Income-to-loan ratio: Measuring a borrower's ability to manage the loan relative to their resources
+- Income per credit year: Normalizing income against credit history length
+- Debt-to-income conversion: Converting loan percent income to a more interpretable percentage metric
+
+**Risk Assessment Variables:**
+- Grade numeric encoding: Converting categorical loan grades (A-G) to a numerical scale (1-7)
+- Risk factor: Creating an interaction term between grade numeric and interest rate
+
+These engineered features enhance the model's ability to capture nuanced relationships beyond what individual variables can detect. For categorical variables, we implemented one-hot encoding for home ownership status, loan intent, loan grade, and previous default history.
+
+The preprocessed dataset was divided into training (70%) and testing (30%) sets while maintaining consistent class distribution across both partitions:
+- Training set: 7,001 observations with 22.1% default rate
+- Testing set: 2,998 observations with 22.1% default rate
+
+For models sensitive to feature scales (particularly Neural Networks), we applied standardization to numerical features.
+
+# Model Training and Evaluation
+
+## Random Forest Model
+
+```{r random-forest}
+# Set control parameters with cross-validation
+set.seed(123)
+ctrl <- trainControl(
+  method = "cv",
+  number = 5,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary,
+  savePredictions = TRUE
+)
+
+# Train Random Forest model with lighter parameters for better performance
+rf_model <- train(
+  x = x_train,
+  y = y_train,
+  method = "rf",
+  trControl = ctrl,
+  metric = "ROC",
+  tuneLength = 3,
+  importance = TRUE,
+  ntree = 100  # Reduced for faster processing
+)
+
+# Evaluate on test set
+rf_pred <- predict(rf_model, x_test)
+rf_prob <- predict(rf_model, x_test, type = "prob")
+
+# Create confusion matrix
+rf_cm <- confusionMatrix(rf_pred, y_test, positive = "default")
+
+# Print results
+print(rf_model)
+print(rf_cm)
+
+# Plot ROC curve
+rf_roc <- roc(y_test, rf_prob$default)
+plot(rf_roc, main = "ROC Curve - Random Forest Model", col = "#3498db", lwd = 2)
+abline(a = 0, b = 1, lty = 2, col = "gray")
+text(0.8, 0.2, paste("AUC =", round(auc(rf_roc), 3)), col = "#3498db", font = 2)
+
+# Variable Importance
+top_vars <- varImp(rf_model)
+plot(top_vars, main = "Variable Importance (Random Forest)", 
+     top = 15, col = "#3498db")
+```
+
+### Random Forest Performance Analysis
+
+The optimal Random Forest configuration was determined through 5-fold cross-validation, with the best performance achieved using mtry = 14. This indicates that considering approximately half of the available features at each decision point provides the optimal balance for this classification problem.
+
+The model exhibits exceptional predictive power:
+
+- **AUC-ROC**: 0.931, indicating outstanding discrimination between default and non-default cases
+- **Overall Accuracy**: 93.26% (95% CI: 92.31%-94.13%)
+- **Sensitivity** (Default Detection): 74.96%, representing strong ability to identify actual defaults
+- **Specificity** (Non-Default Detection): 98.46%, showing excellent ability to identify creditworthy borrowers
+- **Kappa Statistic**: 0.789, confirming strong agreement beyond chance
+
+The feature importance analysis reveals that our engineered features substantially enhanced performance:
+
+- **Person Income**: Emerged as the single most important predictor
+- **Employment Length**: Ranked second, suggesting employment stability is a powerful signal of credit risk
+- **Risk Factor**: Our engineered interaction between loan grade and interest rate ranked third
+- **Home Ownership (RENT)**: Confirmed the importance of housing status, with rental arrangements associated with higher risk
+
+The strong performance across metrics confirms that Random Forest effectively captures both linear and non-linear relationships within the credit data.
+
+## Neural Network Model
+
+```{r neural-network}
+# Train Neural Network model using caret with simpler parameters
+set.seed(123)
+nn_grid <- expand.grid(
+  size = c(3, 5),  # Reduced for faster processing
+  decay = c(0.1)   # Single regularization value
+)
+
+nn_model <- train(
+  x = x_train_scaled,
+  y = y_train,
+  method = "nnet",
+  tuneGrid = nn_grid,
+  trControl = ctrl,
+  metric = "ROC",
+  trace = FALSE,
+  maxit = 100,     # Reduced number of iterations
+  MaxNWts = 1000   # Lower weight limit
+)
+
+# Evaluate on test set
+nn_pred <- predict(nn_model, x_test_scaled)
+nn_prob <- predict(nn_model, x_test_scaled, type = "prob")
+
+# Create confusion matrix
+nn_cm <- confusionMatrix(nn_pred, y_test, positive = "default")
+
+# Print results
+print(nn_model)
+print(nn_cm)
+
+# Plot ROC curve
+nn_roc <- roc(y_test, nn_prob$default)
+plot(nn_roc, main = "ROC Curve - Neural Network Model", col = "#9b59b6", lwd = 2)
+abline(a = 0, b = 1, lty = 2, col = "gray")
+text(0.8, 0.2, paste("AUC =", round(auc(nn_roc), 3)), col = "#9b59b6", font = 2)
+```
+
+### Neural Network Performance Analysis
+
+After cross-validation testing, the optimal neural network configuration was determined to have 5 hidden nodes with a decay (regularization) parameter of 0.1. This architecture balances model complexity with generalization ability, preventing overfitting while capturing non-linear relationships in the credit data.
+
+The Neural Network achieves strong performance metrics:
+
+- **AUC-ROC**: 0.911, indicating excellent discriminative ability slightly below but comparable to the Random Forest (0.931)
+- **Overall Accuracy**: 90.76% (95% CI: 89.67%-91.77%)
+- **Sensitivity** (Default Detection): 68.02%, somewhat lower than the Random Forest
+- **Specificity** (Non-Default Detection): 97.22%, very high but marginally lower than Random Forest
+- **Kappa Statistic**: 0.709, demonstrating substantial agreement beyond chance
+
+The Neural Network's performance, while strong, shows some trade-offs compared to the Random Forest:
+
+- **Lower Sensitivity**: The model's ability to detect actual defaults (68.02%) is noticeably lower than the Random Forest (74.96%)
+- **Strong Specificity**: The model maintains excellent specificity (97.22%), meaning it rarely misclassifies good borrowers as high-risk
+- **Balanced Accuracy**: The model achieves a balanced accuracy of 82.62%, which is good but below the Random Forest's 86.71%
+
+These differences likely stem from the neural network's parametric nature and its approach to handling categorical variables after one-hot encoding.
+
+## Naive Bayes Model
+
+```{r naive-bayes}
+# Train Naive Bayes model with simple parameters
+set.seed(123)
+nb_model <- train(
+  x = x_train,
+  y = y_train,
+  method = "naive_bayes",
+  trControl = ctrl,
+  metric = "ROC",
+  tuneLength = 3  # Reduced for faster processing
+)
+
+# Evaluate on test set
+nb_pred <- predict(nb_model, x_test)
+nb_prob <- predict(nb_model, x_test, type = "prob")
+
+# Create confusion matrix
+nb_cm <- confusionMatrix(nb_pred, y_test, positive = "default")
+
+# Print results
+print(nb_model)
+print(nb_cm)
+
+# Plot ROC curve
+nb_roc <- roc(y_test, nb_prob$default)
+plot(nb_roc, main = "ROC Curve - Naive Bayes Model", col = "#2ecc71", lwd = 2)
+abline(a = 0, b = 1, lty = 2, col = "gray")
+text(0.8, 0.2, paste("AUC =", round(auc(nb_roc), 3)), col = "#2ecc71", font = 2)
+```
+
+### Naive Bayes Performance Analysis
+
+Through cross-validation, we determined that the kernel density estimation approach (usekernel = TRUE) provided superior performance compared to parametric assumptions. This flexibility allowed the model to better adapt to the non-Gaussian distributions present in our financial data.
+
+The Naive Bayes model demonstrates moderate to good predictive ability:
+
+- **AUC-ROC**: 0.884, indicating good discriminative power, though notably lower than both Random Forest (0.931) and Neural Network (0.911)
+- **Overall Accuracy**: 84.89% (95% CI: 83.56%-86.15%)
+- **Sensitivity** (Default Detection): 37.26%, substantially lower than other models
+- **Specificity** (Non-Default Detection): 98.42%, slightly higher than the Neural Network
+- **Kappa Statistic**: 0.449, indicating moderate agreement beyond chance
+
+The Naive Bayes model exhibits a distinctive performance profile:
+
+- **High Specificity**: At 98.42%, it excels at identifying creditworthy applicants
+- **Low Sensitivity**: The 37.26% sensitivity highlights a significant limitation in identifying actual defaults
+- **Classification Bias**: The model reveals a strong bias toward the majority class (no_default), identifying only 247 of 663 actual defaults in the test set
+
+This performance pattern likely stems from the model's fundamental assumption of feature independence, which is violated in credit data where factors like income, loan amount, and interest rate exhibit complex interdependencies.
+
+# Model Comparison and Evaluation
+
+```{r model-comparison}
+# Compare model performance
+models <- list(
+  "Random Forest" = rf_model,
+  "Neural Network" = nn_model,
+  "Naive Bayes" = nb_model
+)
+
+# Extract ROC values for comparison
+roc_values <- resamples(models)
+
+# Plot comparison of ROC across models
+bwplot(roc_values, metric = "ROC", main = "Model Comparison - ROC")
+
+# Create comparison data frame for metrics
+model_comparison <- data.frame(
+  Model = c("Random Forest", "Neural Network", "Naive Bayes"),
+  Accuracy = c(rf_cm$overall["Accuracy"], nn_cm$overall["Accuracy"], nb_cm$overall["Accuracy"]),
+  Sensitivity = c(rf_cm$byClass["Sensitivity"], nn_cm$byClass["Sensitivity"], nb_cm$byClass["Sensitivity"]),
+  Specificity = c(rf_cm$byClass["Specificity"], nn_cm$byClass["Specificity"], nb_cm$byClass["Specificity"]),
+  PPV = c(rf_cm$byClass["Pos Pred Value"], nn_cm$byClass["Pos Pred Value"], nb_cm$byClass["Pos Pred Value"]),
+  NPV = c(rf_cm$byClass["Neg Pred Value"], nn_cm$byClass["Neg Pred Value"], nb_cm$byClass["Neg Pred Value"]),
+  F1 = c(rf_cm$byClass["F1"], nn_cm$byClass["F1"], nb_cm$byClass["F1"]),
+  AUC = c(auc(rf_roc), auc(nn_roc), auc(nb_roc))
+)
+
+# Format numbers in the table
+model_comparison[,2:8] <- round(model_comparison[,2:8], 4)
+
+# Display model comparison table with proper formatting
+kable(model_comparison, caption = "Model Performance Comparison") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  row_spec(which.max(model_comparison$AUC), background = "#e8f9e9", bold = TRUE)
+
+# Plot ROC curves for all models on the same graph
+plot(rf_roc, col = "#3498db", lwd = 2, main = "ROC Curve Comparison")
+plot(nn_roc, col = "#9b59b6", lwd = 2, add = TRUE)
+plot(nb_roc, col = "#2ecc71", lwd = 2, add = TRUE)
+abline(a = 0, b = 1, lty = 2, col = "gray")
+legend("bottomright", 
+       legend = c(paste("Random Forest, AUC =", round(auc(rf_roc), 3)),
+                 paste("Neural Network, AUC =", round(auc(nn_roc), 3)),
+                 paste("Naive Bayes, AUC =", round(auc(nb_roc), 3))),
+       col = c("#3498db", "#9b59b6", "#2ecc71"),
+       lwd = 2)
+```
+
+## Model Selection and Comparative Analysis
+
+The cross-validated ROC comparison illustrates clear performance stratification:
+
+- **Random Forest**: Consistently superior with an AUC of 0.931, demonstrating the highest discrimination power
+- **Neural Network**: Strong performance with an AUC of 0.911, slightly below Random Forest but with comparable upper-range performance
+- **Naive Bayes**: Lower performance with an AUC of 0.884, though still showing reasonable discriminative ability
+
+The ROC curve comparison provides additional insight into model behavior at different operating thresholds:
+
+- **Initial Curve Section** (High Specificity Region): Random Forest demonstrates superior performance in identifying the highest-risk borrowers
+- **Middle Section** (Balanced Region): All three models maintain similar relative positioning throughout the operating range
+- **Upper Right Section** (High Sensitivity Region): The models converge at the extremes
+
+The performance metrics table confirms Random Forest's superiority across all dimensions:
+
+- **Accuracy**: Random Forest (93.26%) > Neural Network (90.76%) > Naive Bayes (84.89%)
+- **Sensitivity**: Random Forest (74.96%) > Neural Network (68.02%) > Naive Bayes (37.25%)
+- **F1 Score**: Random Forest (0.8311) > Neural Network (0.7651) > Naive Bayes (0.5216)
+
+Most notably, all models maintain exceptionally high specificity (>97%), but differ dramatically in sensitivity, with Naive Bayes detecting only half as many defaults as Random Forest. This sensitivity difference represents the most critical distinction for practical implementation.
+
+Based on this assessment:
+- **Primary Model Selection**: Random Forest emerges as the clear choice for primary implementation
+- **Model Complexity vs. Performance**: The performance advantage of Random Forest justifies its selection despite potentially higher computational requirements
+- **Potential Ensemble Approach**: The high specificity of all models suggests potential value in an ensemble approach for borderline cases
+
+# Business Impact Analysis
+
+```{r business-impact}
+# Select the best model (Random Forest based on performance)
+best_model <- rf_model
+best_probs <- rf_prob
+
+# Create a function to calculate expected profit/loss
+calculate_expected_value <- function(probs, actual, profit_per_good_loan = 1000, 
+                                    loss_per_default = 5000) {
+  # Assuming "default" is the positive class (index 2 in probs)
+  predicted_default_prob <- probs$default
+  
+  # Calculate profit for different threshold values
+  thresholds <- seq(0.05, 0.95, by = 0.05)
+  results <- data.frame(
+    Threshold = thresholds,
+    Loans_Approved = numeric(length(thresholds)),
+    Defaults = numeric(length(thresholds)),
+    Non_Defaults = numeric(length(thresholds)),
+    Profit = numeric(length(thresholds)),
+    ROI = numeric(length(thresholds))
+  )
+  
+  for (i in 1:length(thresholds)) {
+    threshold <- thresholds[i]
+    # Predict loan approval (approve if default probability is less than threshold)
+    approve <- predicted_default_prob < threshold
+    
+    # Count outcomes
+    true_outcome <- as.character(actual)
+    approved_count <- sum(approve)
+    default_count <- sum(approve & true_outcome == "default")
+    non_default_count <- sum(approve & true_outcome == "no_default")
+    
+    # Calculate profit/loss
+    profit <- (non_default_count * profit_per_good_loan) - (default_count * loss_per_default)
+    
+    # Store results
+    results$Loans_Approved[i] <- approved_count
+    results$Defaults[i] <- default_count
+    results$Non_Defaults[i] <- non_default_count
+    results$Profit[i] <- profit
+    
+    # Calculate ROI (Return on Investment)
+    total_loaned <- approved_count * mean(test_data$loan_amnt)
+    results$ROI[i] <- ifelse(total_loaned > 0, profit / total_loaned, 0)
+  }
+  
+  return(results)
+}
+
+# Calculate and visualize business impact for different threshold values
+impact_results <- calculate_expected_value(best_probs, y_test)
+
+# Find the optimal threshold
+optimal_threshold_idx <- which.max(impact_results$Profit)
+optimal_threshold <- impact_results$Threshold[optimal_threshold_idx]
+
+# Plot profit by threshold
+ggplot(impact_results, aes(x = Threshold, y = Profit)) +
+  geom_line(color = "#3498db", size = 1.2) +
+  geom_point(color = "#3498db", size = 3) +
+  geom_vline(xintercept = optimal_threshold, linetype = "dashed", color = "#e74c3c") +
+  geom_text(aes(x = optimal_threshold + 0.05, y = max(Profit) * 0.8, 
+                label = paste("Optimal Threshold =", optimal_threshold)), 
+            color = "#e74c3c", fontface = "bold") +
+  labs(title = "Profit by Classification Threshold",
+       x = "Default Probability Threshold",
+       y = "Expected Profit ($)") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+# Plot approval rate and default rate by threshold
+impact_results$Approval_Rate <- impact_results$Loans_Approved / nrow(test_data)
+impact_results$Default_Rate <- impact_results$Defaults / impact_results$Loans_Approved
+
+# Convert to long format for plotting
+impact_long <- impact_results %>%
+  select(Threshold, Approval_Rate, Default_Rate) %>%
+  pivot_longer(cols = c(Approval_Rate, Default_Rate),
+               names_to = "Metric",
+               values_to = "Rate")
+
+ggplot(impact_long, aes(x = Threshold, y = Rate, color = Metric)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  geom_vline(xintercept = optimal_threshold, linetype = "dashed", color = "#e74c3c") +
+  scale_color_manual(values = c("Approval_Rate" = "#2ecc71", "Default_Rate" = "#e74c3c")) +
+  labs(title = "Approval and Default Rates by Threshold",
+       x = "Default Probability Threshold",
+       y = "Rate") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+# Display optimal threshold results
+optimal_result <- impact_results[optimal_threshold_idx, ]
+optimal_result_table <- data.frame(
+  Metric = c("Optimal Threshold", "Loans Approved", "Approval Rate", "Expected Defaults", 
+             "Default Rate", "Expected Profit", "ROI"),
+  Value = c(optimal_result$Threshold, 
+            optimal_result$Loans_Approved, 
+            paste0(round(optimal_result$Approval_Rate * 100, 2), "%"),
+            optimal_result$Defaults,
+            paste0(round(optimal_result$Default_Rate * 100, 2), "%"),
+            paste0("$", format(optimal_result$Profit, big.mark = ",")),
+            paste0(round(optimal_result$ROI * 100, 2), "%"))
+)
+
+kable(optimal_result_table, caption = "Optimal Threshold Business Impact") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+## Business Impact Analysis
+
+Transforming our statistical model into actionable business strategy requires translating technical metrics into financial outcomes. The profit curve analysis illustrates how expected financial returns vary across different default probability thresholds:
+
+- **Optimal Threshold**: The profit-maximizing threshold occurs at 0.30, indicating that loans should be approved for applicants with predicted default probabilities below this value
+- **Expected Profit**: At this optimal threshold, the expected profit is $1,542,000, representing the maximum achievable return given the risk-reward trade-off
+- **Profit Sensitivity**: The curve shows relative stability in the 0.25-0.35 threshold range, suggesting some flexibility in threshold selection without dramatic profit impact
+
+At the optimal threshold of 0.30, the model yields the following operational metrics:
+
+- **Approval Rate**: 77.85% of loan applications would be approved, maintaining substantial market access while screening out highest-risk applicants
+- **Expected Default Rate**: Only 5.66% of approved loans are expected to default, significantly below the 22.1% baseline rate in the overall applicant pool
+- **Return on Investment**: The model generates a 7.08% ROI, representing a strong performance in the lending context
+
+The approval and default rate curves demonstrate the classic risk-return trade-off in lending:
+
+- Each incremental increase in approval rate comes with disproportionately higher default risk
+- Conservative thresholds achieve very low default rates but sacrifice substantial profitable lending opportunities
+
+The business impact of implementing this model is substantial compared to alternatives:
+
+- **Versus Baseline Lending**: Compared to approving all loans, our model increases profitability by screening out high-risk applicants
+- **Versus Traditional Credit Scoring**: The model's 5.66% expected default rate at a 77.85% approval rate likely outperforms traditional credit scoring approaches
+- **Versus Conservative Lending**: Compared to an overly restrictive approach (e.g., threshold of 0.5), our optimal threshold captures approximately $400,000 in additional profit
+
+# Risk Factor Analysis and Segmentation
+
+```{r risk-analysis}
+# Create risk scores based on predicted probabilities
+test_with_probs <- test_data
+test_with_probs$default_prob <- best_probs$default
+
+# Recover original categories from model_data
+# First, create a dataframe with indices
+test_indices <- as.numeric(rownames(test_data))
+original_data_subset <- model_data[test_indices, ]
+
+# Add original categories to test_with_probs
+test_with_probs$loan_grade <- original_data_subset$loan_grade
+test_with_probs$loan_intent <- original_data_subset$loan_intent
+test_with_probs$person_home_ownership <- original_data_subset$person_home_ownership
+test_with_probs$cb_person_default_on_file <- original_data_subset$cb_person_default_on_file
+
+# Define risk buckets
+test_with_probs$risk_bucket <- cut(test_with_probs$default_prob,
+                                  breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 1),
+                                  labels = c("Very Low", "Low", "Moderate", "High", "Very High", "Extreme"),
+                                  include.lowest = TRUE)
+
+# Analyze actual default rates by risk bucket
+risk_performance <- test_with_probs %>%
+  group_by(risk_bucket) %>%
+  summarise(
+    Count = n(),
+    Percentage = n() / nrow(test_with_probs) * 100,
+    Actual_Default_Rate = mean(loan_status == "default") * 100,
+    Avg_Loan_Amount = mean(loan_amnt),
+    Avg_Interest_Rate = mean(loan_int_rate),
+    Avg_Income = mean(person_income),
+    Total_Loan_Value = sum(loan_amnt)
+  )
+
+# Display risk bucket performance
+kable(risk_performance, caption = "Risk Bucket Performance", digits = 2) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+
+# Visualize risk bucket distribution
+ggplot(risk_performance, aes(x = risk_bucket, y = Count, fill = risk_bucket)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(round(Percentage, 1), "%")), 
+            position = position_stack(vjust = 0.5), 
+            color = "white", fontface = "bold") +
+  scale_fill_viridis_d(option = "D", begin = 0.1, end = 0.9) +
+  labs(title = "Distribution of Risk Buckets",
+       x = "Risk Category",
+       y = "Number of Customers") +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Visualize actual default rates by predicted risk bucket
+ggplot(risk_performance, aes(x = risk_bucket, y = Actual_Default_Rate, fill = risk_bucket)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(round(Actual_Default_Rate, 1), "%")), 
+            position = position_stack(vjust = 0.5), 
+            color = "white", fontface = "bold") +
+  scale_fill_viridis_d(option = "D", begin = 0.1, end = 0.9) +
+  labs(title = "Actual Default Rate by Risk Category",
+       x = "Risk Category",
+       y = "Default Rate (%)") +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Risk profile by key characteristics
+# Create a function to visualize risk distribution by category
+plot_risk_by_category <- function(data, category, title) {
+  data %>%
+    group_by({{category}}, risk_bucket) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    group_by({{category}}) %>%
+    mutate(percentage = count / sum(count) * 100) %>%
+    ggplot(aes(x = {{category}}, y = percentage, fill = risk_bucket)) +
+    geom_bar(stat = "identity", position = "fill") +
+    scale_fill_viridis_d(option = "D", begin = 0.1, end = 0.9, name = "Risk Category") +
+    labs(title = title,
+         x = deparse(substitute(category)),
+         y = "Percentage") +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+}
+
+# Risk distribution by loan grade
+p1 <- plot_risk_by_category(test_with_probs, loan_grade, "Risk Distribution by Loan Grade")
+
+# Risk distribution by loan intent
+p2 <- plot_risk_by_category(test_with_probs, loan_intent, "Risk Distribution by Loan Intent")
+
+# Risk distribution by home ownership
+p3 <- plot_risk_by_category(test_with_probs, person_home_ownership, "Risk Distribution by Home Ownership")
+
+# Risk distribution by previous default
+p4 <- plot_risk_by_category(test_with_probs, cb_person_default_on_file, "Risk Distribution by Previous Default")
+
+# Arrange plots
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+## Risk Segmentation Analysis
+
+The risk stratification analysis provides crucial insights into the composition and behavior of different borrower segments, enabling targeted lending strategies beyond the binary approve/reject decision framework.
+
+Our model effectively categorizes borrowers into six distinct risk tiers:
+
+- **Very Low Risk**: The largest segment (58.9% of applicants) with excellent creditworthiness
+- **Low Risk**: A significant group (14.2%) with strong but slightly reduced repayment probability
+- **Moderate Risk**: A smaller cohort (5.0%) at the approval borderline under the optimal threshold
+- **High & Very High Risk**: Small segments (2.8% and 1.4%) that would generally be declined
+- **Extreme Risk**: A substantial group (17.7%) with dramatically elevated default probability
+
+The actual default rates across risk buckets demonstrate the model's exceptional discriminative power:
+
+- **Extreme Risk**: 93.4% default rate
+- **Very High & High Risk**: 24.4% and 28.9% default rates
+- **Moderate & Low Risk**: 11.3% and 12.7% default rates
+- **Very Low Risk**: Only 3.5% default rate
+
+The nearly 27x difference in default rates between the lowest and highest risk buckets confirms the model's effectiveness in risk discrimination.
+
+The relationship between risk categories and customer attributes reveals important patterns:
+
+- **Loan Grade**: Near-perfect alignment between the lender's assigned grade and model-predicted risk
+- **Loan Intent**: Remarkably consistent risk distribution across purposes
+- **Home Ownership**: "OTHER" housing status shows dramatically higher Extreme risk concentration (approximately 45%)
+- **Previous Default**: Strong but imperfect relationship with current default risk
+
+The financial profile of each risk bucket reveals additional actionable insights:
+
+- **Interest Rate Progression**: Average rates increase steadily from 9.6% for Very Low risk to 14.7% for Very High risk
+- **Loan Amount Patterns**: Loan size increases with risk through the Moderate tier, then declines significantly
+- **Income Variation**: Average income declines from Very Low to Low risk, then fluctuates without clear trend
+- **Portfolio Concentration**: Extreme risk applications represent approximately $5.75 million in loan value
+
+# Conclusion and Recommendations
+
+## Key Findings
+
+1. **Model Performance**:
+   * The Random Forest model demonstrated the strongest performance with an AUC of 0.931 and accuracy of 93.26%.
+   * Key predictors of default risk include person income, employment length, our engineered risk factor (combining loan grade and interest rate), home ownership status, and loan intent.
+
+2. **Risk Segmentation**:
+   * The model effectively separated borrowers into risk categories with default rates ranging from 3.5% in the lowest risk bucket to 93.4% in the highest.
+   * Approximately 73.1% of applicants fall into the 'Very Low' and 'Low' risk categories, which represent safe lending opportunities.
+
+3. **Business Impact**:
+   * Using the optimal threshold of 0.30 for loan approval decisions could increase profitability by approximately $1,542,000.
+   * This approach would approve approximately 77.85% of loan applications with an expected default rate of 5.66%.
+
+4. **Risk Factors**:
+   * Loan grade shows the strongest relationship with default risk, with a clear stepwise increase from grade A (8%) to grade G (nearly 100%).
+   * Previous default history substantially increases risk, with previous defaulters showing a 40% likelihood of defaulting again compared to 18% for those without prior defaults.
+   * Home ownership status provides significant risk discrimination, with homeowners demonstrating substantially lower default rates (8%) compared to renters (33%) and 'OTHER' status (42%).
+   * The interaction between loan grade and interest rate in our engineered risk factor provides stronger predictive power than either variable alone.
+
+## Recommendations
+
+1. **Implementation Strategy**:
+   * Deploy the Random Forest model as a decision support tool for loan officers, with the recommended probability threshold of 0.30.
+   * Create a tiered interest rate structure based on risk buckets to better align pricing with risk, particularly focusing on the differentiation between Low and Moderate risk categories.
+   * Implement automated approvals for Very Low risk applicants to streamline operations and reduce decision time.
+
+2. **Risk Mitigation**:
+   * For borrowers in 'Moderate' risk categories, consider additional documentation requirements or collateral to reduce default probability.
+   * Implement stricter verification processes for applicants with previous default history, focusing on recent credit rehabilitation efforts.
+   * Develop targeted monitoring protocols for higher-risk approved loans, with proactive intervention for early signs of payment difficulty.
+
+3. **Business Opportunities**:
+   * Develop specialized loan products aligned with the risk segmentation model, including premium products for Very Low risk customers and secured options for Moderate risk applicants.
+   * Consider interest rate reductions for Very Low risk customers to increase competitiveness and market share in this highly profitable segment.
+   * Explore a credit-builder program for borderline applicants who fall just outside approval thresholds, focusing on specific improvement factors identified by the model.
+
+4. **Monitoring and Refinement**:
+   * Establish a quarterly model performance review process comparing predicted probabilities to actual default rates across segments.
+   * Implement continuous tracking of risk factors to identify emerging trends or changes in relative importance.
+   * Periodically retrain the model with new data, with a formal annual review to capture changing economic conditions and customer behaviors.
+
+This credit risk classification model provides a data-driven approach to loan decisioning that can significantly improve the risk-return profile of the lending portfolio. By implementing these recommendations, the organization can make more informed lending decisions, appropriately price for risk, and expand safely into new customer segments.
+
+## Executive Summary
+
+This credit risk classification analysis demonstrates how advanced machine learning techniques can transform loan decisioning processes. By implementing this model, lenders can expect:
+
+1. **Improved Risk Assessment**: The model accurately identifies high-risk borrowers with exceptional precision (93.25% positive predictive value), allowing for better-informed lending decisions.
+
+2. **Increased Profitability**: At the optimal threshold, expected profits could increase by approximately $1,542,000 with a 7.08% return on investment compared to current lending practices.
+
+3. **Strategic Portfolio Management**: Detailed risk segmentation enables targeted approaches for different customer segments, balancing growth with risk management.
+
+4. **Actionable Insights**: Clear identification of key risk factors provides direction for policy adjustments and product development.
+
+The analysis shows that while default risk cannot be eliminated, it can be effectively managed through data-driven approaches. By incorporating this classification model into lending practices, financial institutions can make more informed decisions that balance risk mitigation with business growth objectives.
